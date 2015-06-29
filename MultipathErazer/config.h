@@ -1,0 +1,29 @@
+#include <Arduino.h>
+#include <avr/eeprom.h>
+
+#define EEPROM_MARKER 0xDEADBEEF
+
+typedef struct{
+    int8_t      current_channel; // 0 - 39
+    uint32_t    marker;
+}s_conf;
+
+s_conf config;
+
+void writeConfig() {
+    eeprom_update_block((void*)&config, (void*)0, sizeof(config));
+}
+
+void resetConfig() {
+    uint8_t i;
+    config.current_channel = 0;
+    config.marker = EEPROM_MARKER;
+    writeConfig();
+}
+
+void readConfig() {
+    eeprom_read_block((void*)&config, (void*)0, sizeof(config));
+    if(config.marker != EEPROM_MARKER) {
+        resetConfig();
+    }
+}

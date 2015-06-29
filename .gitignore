@@ -1,0 +1,6 @@
+*.cppproj
+*.atsln
+*.atsuo
+MultipathErazer/Debug
+MultipathErazer/Release
+MultipathErazer/Visual Micro
