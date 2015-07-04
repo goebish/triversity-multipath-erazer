@@ -71,16 +71,6 @@ void updateMainDialog(uint8_t portion)
         tft.print(F(" MHz"));
     }
     
-    if(portion & _BV(MAIN_MODE)) { // current selection mode
-        tft.setCursor(50, 4);
-        tft.setTextSize(1);
-        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
-        if(config.select_mode == MODE_MANUAL)
-            tft.print(F("MANUAL"));
-        else
-            tft.print(F(" AUTO "));
-    }
-    
     if(portion & _BV(MAIN_BATTERY)) { // battery voltage
         tft.fillRect(120, 4, 36, 7, ST7735_BLACK);
         tft.setCursor(120, 4);

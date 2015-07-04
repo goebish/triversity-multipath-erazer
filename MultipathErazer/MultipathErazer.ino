@@ -149,17 +149,7 @@ void processCalibState()
 }
 
 void processMainState()
-{
-    int8_t direction=1;
-    uint8_t autoRepeat = 7;
-    if(BTN_DOWN) { // change select mode
-        shortbeep();
-        config.select_mode = !config.select_mode;
-        updateMainDialog(_BV(MAIN_MODE));
-        saveSettings = millis() + 3000;
-        waitButtonsRelease();
-        return;
-    }
+{   
     if(BTN_UP) { // basic calibration dialog
         shortbeep();
         state = STATE_CALIB;
@@ -169,46 +159,54 @@ void processMainState()
     } else 
     if(BTN_RIGHT || BTN_LEFT) { // change current channel
         shortbeep();
-        switch(config.select_mode) {
-            case MODE_MANUAL:
-                if(BTN_RIGHT) {
-                    config.current_channel ++;
-                    if(config.current_channel > 39)
+        if(BTN_RIGHT) {
+            config.current_channel ++;
+            if(config.current_channel > 39) {
+                config.current_channel = 0;
+            }         
+        }
+        else if(BTN_LEFT) {
+            config.current_channel --;
+            if(config.current_channel < 0) {
+                config.current_channel = 39;
+            }                
+        }
+        SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
+        updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
+        uint8_t autoRepeat = 7;
+        while(BTN_ANY && autoRepeat--) {
+            delay(20);
+        }
+        
+        // long press = auto scan
+        if(BTN_ANY) {
+            int8_t direction=1;
+            if(BTN_LEFT) {
+                direction = -1;
+            }
+            bool button_released=false;                   
+            while(!BTN_ANY || !button_released) {
+                config.current_channel += direction;
+                if(config.current_channel > 39) {
                     config.current_channel = 0;
-                }
-                else if(BTN_LEFT) {
-                    config.current_channel --;
-                    if(config.current_channel < 0)
+                }                    
+                if(config.current_channel < 0) {
                     config.current_channel = 39;
-                }
+                }                    
                 SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
                 updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
-                while(BTN_ANY && autoRepeat--) {
-                    delay(20);
+                delay(30); // let rx stabilize on new frequency
+                switchBestRSSI();
+                if(max_rssi >= config.auto_threshold) {
+                    shortbeep();
+                    break;
                 }
-                break;
-            case MODE_AUTO:
-                if(BTN_LEFT)
-                    direction = -1;
-                waitButtonsRelease();
-                while(!BTN_ANY) {
-                    config.current_channel += direction;
-                    if(config.current_channel > 39)
-                        config.current_channel = 0;
-                    if(config.current_channel < 0)
-                        config.current_channel = 39;
-                    SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
-                    updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
-                    delay(30); // let rx stabilize on new frequency
-                    switchBestRSSI();
-                    if(max_rssi >= config.auto_threshold) {
-                        shortbeep();
-                        break;
-                    }                        
-                }
-                waitButtonsRelease();
-                break;
-        }        
+                if(!BTN_ANY) {
+                    button_released = true;
+                }                                         
+            }
+        }                
+        waitButtonsRelease();
         saveSettings = millis() + 3000; // save settings 3s after last change
     }
     switchBestRSSI();
