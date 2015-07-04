@@ -195,8 +195,11 @@ void processMainState()
                 }                    
                 SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
                 updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
-                delay(30); // let rx stabilize on new frequency
-                switchBestRSSI();
+                uint32_t timeout = millis() + 50;
+                // let rx stabilize on new frequency
+                while(millis() < timeout) {    
+                    switchBestRSSI();
+                }                
                 if(max_rssi >= config.auto_threshold) {
                     shortbeep();
                     break;
