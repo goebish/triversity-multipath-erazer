@@ -11,10 +11,13 @@ void select(uint8_t source)
     // select PI5V Output 
     uint8_t temp = PORTD & 0b10011111;
     PORTD = temp | (source << 5); 
-    // led for active vRX
-    /*uint8_t val =  PORTC &= ~0b111000;
-    val |= 0b1000 << source;
-    PORTC = val;*/
-    PORTC = (PORTC & ~0b111000) | (0b1000 << source);
+    // led for active vRX + all other vRX(s) with same RSSI 
+    uint8_t val =  PORTC &= ~0b111000;
+    for(uint8_t i=0; i<NUMBER_OF_RECEIVER; i++) {
+        if(RSSI_Value[i] == RSSI_Value[source]) {
+            val |= 0b1000 << i;
+        }
+    }
+    PORTC = val;
     SelectedSource = source;
 }
