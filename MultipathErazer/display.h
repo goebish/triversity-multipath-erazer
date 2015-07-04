@@ -6,6 +6,7 @@ enum MAIN_DIALOG{ // portions for updateMainDialog
     MAIN_BAND,
     MAIN_CHANNEL,
     MAIN_BATTERY,
+    MAIN_MODE,
 };
 
 enum CALIB_DIALOG{

@@ -36,38 +36,49 @@ void updateMainDialog(uint8_t portion)
     }
     
     if(portion & _BV(MAIN_BAND)) { // band name
-        tft.fillRect( 10+10+12*5,20, 75, 14, ST7735_BLACK);
         tft.setCursor(10+10+12*5, 20);
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
         switch(config.current_channel/8) {
             case BAND_A:
-            tft.print("A");
-            break;
+                tft.print(F("A     "));
+                break;
             case BAND_B:
-            tft.print("B");
-            break;
+                tft.print(F("B     "));
+                break;
             case BAND_E:
-            tft.print("E");
-            break;
+                tft.print(F("E     "));
+                break;
             case BAND_IRC:
-            tft.print(F("IRC/FS"));
-            break;
+                tft.print(F("IRC/FS"));
+                break;
             case BAND_RACER:
-            tft.print(F("Racer"));
-            break;
+                tft.print(F("Racer "));
+                break;
         }
     }
     
     if(portion & _BV(MAIN_CHANNEL)) { // channel # + freq
+        // draw rectangle around current channel #
         for(i=0; i<8; i++)
-        tft.drawRect(10 + i*18, 43, 14, 18, ST7735_BLACK);
+            tft.drawRect(10 + i*18, 43, 14, 18, ST7735_BLACK);
         tft.drawRect(10 + (config.current_channel%8)*18, 43, 14, 18, ST7735_GREEN);
         // frequency
-        tft.fillRect(35,75,12*4,14,ST7735_BLACK);
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
         tft.setCursor(35, 75);
         tft.print(pgm_read_word_near(channelFreqTable + config.current_channel));
         tft.print(F(" MHz"));
+    }
+    
+    if(portion & _BV(MAIN_MODE)) { // current selection mode
+        tft.setCursor(50, 4);
+        tft.setTextSize(1);
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        if(config.select_mode == MODE_MANUAL)
+            tft.print(F("MANUAL"));
+        else
+            tft.print(F(" AUTO "));
     }
     
     if(portion & _BV(MAIN_BATTERY)) { // battery voltage
@@ -161,12 +172,7 @@ void displaySplash()
     tft.setCursor((160-12*6)/2, 105);
     tft.print(F("Erazer"));
     for(uint8_t i=0; i<30; i++) {
-        /*uint8_t val =  PORTC & ~0b111000;
-        val |= 0b1000 << (i % 3);
-        PORTC = val;*/
-        
         PORTC = (PORTC & ~0b111000) | (0b1000 << (i % 3));
-        
         delay(80);
     }
 }

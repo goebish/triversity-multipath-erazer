@@ -43,6 +43,7 @@ uint16_t RSSI_Value[NUMBER_OF_RECEIVER];
 uint8_t SelectedSource = 0;
 uint8_t vbat;
 uint8_t MaxSource = 0; 
+int16_t max_rssi = 0;
 
 // timers
 uint32_t saveSettings = 0;
@@ -80,8 +81,10 @@ void setup()
     BUZZ_OFF;
     // setup 250khz adc (slightly more than recommended 200 khz max setting
     //setAdcPrescaler(ADC_PS_64);
+    
     // splash screen
     displaySplash();
+    
     // start with main dialog
     initState();
 }
@@ -118,7 +121,7 @@ void initState()
 {
     switch(state) {
         case STATE_MAIN:
-            updateMainDialog(_BV(MAIN_INIT) | _BV(MAIN_BAND) | _BV(MAIN_CHANNEL) );
+            updateMainDialog(_BV(MAIN_INIT) | _BV(MAIN_BAND) | _BV(MAIN_CHANNEL) | _BV(MAIN_MODE) );
             break;
         case STATE_CALIB:
             updateCalibDialog(_BV(CALIB_INIT)); 
@@ -147,6 +150,16 @@ void processCalibState()
 
 void processMainState()
 {
+    int8_t direction=1;
+    uint8_t autoRepeat = 7;
+    if(BTN_DOWN) { // change select mode
+        shortbeep();
+        config.select_mode = !config.select_mode;
+        updateMainDialog(_BV(MAIN_MODE));
+        saveSettings = millis() + 3000;
+        waitButtonsRelease();
+        return;
+    }
     if(BTN_UP) { // basic calibration dialog
         shortbeep();
         state = STATE_CALIB;
@@ -156,22 +169,44 @@ void processMainState()
     } else 
     if(BTN_RIGHT || BTN_LEFT) { // change current channel
         shortbeep();
-        if(BTN_RIGHT) {
-            config.current_channel ++;
-            if(config.current_channel > 39)
-            config.current_channel = 0;
-        }
-        else if(BTN_LEFT) {
-            config.current_channel --;
-            if(config.current_channel < 0)
-            config.current_channel = 39;
-        }
-        SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
-        updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
-        uint8_t autoRepeat = 7;
-        while(BTN_ANY && autoRepeat--) {
-            delay(20);
-        }
+        switch(config.select_mode) {
+            case MODE_MANUAL:
+                if(BTN_RIGHT) {
+                    config.current_channel ++;
+                    if(config.current_channel > 39)
+                    config.current_channel = 0;
+                }
+                else if(BTN_LEFT) {
+                    config.current_channel --;
+                    if(config.current_channel < 0)
+                    config.current_channel = 39;
+                }
+                SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
+                updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
+                while(BTN_ANY && autoRepeat--) {
+                    delay(20);
+                }
+                break;
+            case MODE_AUTO:
+                if(BTN_LEFT)
+                    direction = -1;
+                waitButtonsRelease();
+                while(!BTN_ANY) {
+                    config.current_channel += direction;
+                    if(config.current_channel > 39)
+                        config.current_channel = 0;
+                    if(config.current_channel < 0)
+                        config.current_channel = 39;
+                    SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
+                    switchBestRSSI();
+                    updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
+                    delay(30); // let rx stabilize on new frequency
+                    if(max_rssi >= config.auto_threshold)
+                        break;
+                }
+                waitButtonsRelease();
+                break;
+        }        
         saveSettings = millis() + 3000; // save settings 3s after last change
     }
     switchBestRSSI();
@@ -192,7 +227,7 @@ uint16_t getMaxIndex(unsigned int Array[], unsigned int iSize)
     {
         return 0;
     }
-    int16_t iMax = Array[0];
+    max_rssi = Array[0];
     uint8_t iIndexMax = 0;
     //int16_t hysteresis = analogRead(RSSI_Hysteresis_Pin) >> 5; // 0 - 3.125% hysteresis
     int16_t hysteresis = 0;
@@ -200,14 +235,14 @@ uint16_t getMaxIndex(unsigned int Array[], unsigned int iSize)
     static uint8_t last_index = 0;
     for(unsigned int i = 1; i < iSize; i++)
     {
-        if(Array[i] > (uint16_t)iMax)
+        if(Array[i] > (uint16_t)max_rssi)
         {
-            iMax = Array[i];
+            max_rssi = Array[i];
             iIndexMax = i;
         }
     }
-    if((iMax < last_max - hysteresis) || (iMax > last_max + hysteresis)) {
-        last_max = iMax;
+    if((max_rssi < last_max - hysteresis) || (max_rssi > last_max + hysteresis)) {
+        last_max = max_rssi;
         last_index = iIndexMax;
     }
     return last_index;
@@ -224,8 +259,11 @@ void shortbeep()
 // wait buttons release
 void waitButtonsRelease()
 {
+    uint32_t timeout;
     while(BTN_ANY) {
-        delay(20);
+        timeout = millis()+20;
+        while(millis() < timeout)
+            switchBestRSSI();
         // todo: call non blocking buzzer manager
     }
 }

@@ -13,11 +13,11 @@
 #define BTN_DOWN_PIN (uint8_t)  12
 #define BTN_LEFT_PIN (uint8_t)  1
 
-#define BTN_UP      !(PIND & 0b10000000)
-#define BTN_RIGHT   !(PIND & 0b00000001)
-#define BTN_DOWN    !(PINB & 0b00010000)
-#define BTN_LEFT    !(PIND & 0b00000010)
-#define BTN_ANY     BTN_UP|BTN_RIGHT|BTN_LEFT|BTN_DOWN
+#define BTN_UP      (!(PIND & 0b10000000))
+#define BTN_RIGHT   (!(PIND & 0b00000001))
+#define BTN_DOWN    (!(PINB & 0b00010000))
+#define BTN_LEFT    (!(PIND & 0b00000010))
+#define BTN_ANY     (BTN_UP|BTN_RIGHT|BTN_LEFT|BTN_DOWN)
 
 
 // SPI vRX
