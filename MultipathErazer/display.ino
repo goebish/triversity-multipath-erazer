@@ -138,11 +138,11 @@ PGM_P const menu[]  PROGMEM = {
 void displaySplash()
 {
     tft.fillScreen(ST7735_BLACK);
-    tft.setCursor(40 - 25, 15);
+    tft.setCursor(40, 25);
     tft.print(F("Goebish"));
-    tft.setCursor(76 - 25, 45);
+    tft.setCursor(60, 40);
     tft.print("&");
-    #define LOGO_OFFSET 30
+    #define LOGO_OFFSET 15
     tft.drawCircle(66, 64+LOGO_OFFSET, 22, ST7735_WHITE);
     tft.drawCircle(66, 64+LOGO_OFFSET, 17, ST7735_WHITE);
     tft.fillRect(0, 58+LOGO_OFFSET , 128, 11, ST7735_BLACK);
