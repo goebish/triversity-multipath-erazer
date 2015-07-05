@@ -199,11 +199,9 @@ void processMainState()
                 // LEDs animation
                 PORTC = (PORTC & ~0b111000) | (0b1000 << (config.current_channel % NUMBER_OF_RECEIVER));
                 updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
-                uint32_t timeout = millis() + 50;
                 // let rx stabilize on new frequency
-                while(millis() < timeout) {    
-                    switchBestRSSI();
-                }                
+                delay(40);
+                switchBestRSSI();              
                 if(max_rssi >= config.auto_threshold) {
                     break;
                 }
