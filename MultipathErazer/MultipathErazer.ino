@@ -173,13 +173,13 @@ void processMainState()
         }
         SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
         updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
-        uint8_t autoRepeat = 7;
+        uint8_t autoRepeat = 4;
         while(BTN_ANY && autoRepeat--) {
-            delay(20);
+            delay(40);
+            switchBestRSSI();
         }
-        
         // long press = auto scan
-        if(BTN_ANY) {
+        if(BTN_ANY && max_rssi < config.auto_threshold) {
             int8_t direction=1;
             if(BTN_LEFT) {
                 direction = -1;
