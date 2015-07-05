@@ -98,7 +98,7 @@ void updateMainDialog(uint8_t portion)
 
 void updateCalibDialog(uint8_t portion)
 {
-    uint8_t previous_height[NUMBER_OF_RECEIVER];
+    static uint8_t previous_height[NUMBER_OF_RECEIVER];
     uint16_t RSSI_Previous[NUMBER_OF_RECEIVER];
     uint8_t i;
     if(portion & _BV(CALIB_INIT)) {
