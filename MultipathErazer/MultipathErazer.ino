@@ -44,6 +44,7 @@ uint8_t SelectedSource = 0;
 uint8_t vbat;
 uint8_t MaxSource = 0; 
 int16_t max_rssi = 0;
+bool show_active_leds = true;
 
 // timers
 uint32_t saveSettings = 0;
@@ -110,7 +111,7 @@ void loop()
     // refresh vbat
     if(millis() > checkVbat) {
         checkVbat = millis() + 20000; // check every 20s
-        vbat = map( analogRead(A6)*10, 0, 10240, 0, VBAT_FACTOR);
+        vbat = map( analogRead(VBAT)*10, 0, 10240, 0, VBAT_FACTOR);
         updateMainDialog(_BV(MAIN_BATTERY));        
     }
     
@@ -184,7 +185,8 @@ void processMainState()
             if(BTN_LEFT) {
                 direction = -1;
             }
-            bool button_released=false;                   
+            bool button_released=false;
+            show_active_leds=false;                  
             while(!BTN_ANY || !button_released) {
                 config.current_channel += direction;
                 if(config.current_channel > 39) {
@@ -194,6 +196,8 @@ void processMainState()
                     config.current_channel = 39;
                 }                    
                 SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
+                // LEDs animation
+                PORTC = (PORTC & ~0b111000) | (0b1000 << (config.current_channel % NUMBER_OF_RECEIVER));
                 updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
                 uint32_t timeout = millis() + 50;
                 // let rx stabilize on new frequency
@@ -212,6 +216,7 @@ void processMainState()
         waitButtonsRelease();
         saveSettings = millis() + 3000; // save settings 3s after last change
     }
+    show_active_leds = true;
     switchBestRSSI();
 }
 
