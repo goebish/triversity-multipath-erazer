@@ -64,9 +64,12 @@ void updateMainDialog(uint8_t portion)
     
     if(portion & _BV(MAIN_CHANNEL)) { // channel # + freq
         // draw rectangle around current channel #
-        for(i=0; i<8; i++)
+        for(i=0; i<8; i++) {
             tft.drawRect(10 + i*18, 43, 14, 18, ST7735_BLACK);
+            tft.drawRect( 9 + i*18, 42, 16, 20, ST7735_BLACK);
+        }        
         tft.drawRect(10 + (config.current_channel%8)*18, 43, 14, 18, ST7735_GREEN);
+        tft.drawRect( 9 + (config.current_channel%8)*18, 42, 16, 20, ST7735_GREEN);
         // frequency
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
