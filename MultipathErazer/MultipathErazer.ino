@@ -201,13 +201,13 @@ void processMainState()
                     switchBestRSSI();
                 }                
                 if(max_rssi >= config.auto_threshold) {
-                    shortbeep();
                     break;
                 }
                 if(!BTN_ANY) {
                     button_released = true;
                 }                                         
             }
+            shortbeep();
         }                
         waitButtonsRelease();
         saveSettings = millis() + 3000; // save settings 3s after last change
