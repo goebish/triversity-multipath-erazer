@@ -186,7 +186,8 @@ void processMainState()
                 direction = -1;
             }
             bool button_released=false;
-            show_active_leds=false;                  
+            show_active_leds=false;
+            uint16_t loop_count=0;                 
             while(!BTN_ANY || !button_released) {
                 config.current_channel += direction;
                 if(config.current_channel > 39) {
@@ -197,7 +198,8 @@ void processMainState()
                 }                    
                 SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
                 // LEDs animation
-                PORTC = (PORTC & ~0b111000) | (0b1000 << (config.current_channel % NUMBER_OF_RECEIVER));
+                loop_count += direction;
+                PORTC = (PORTC & ~0b111000) | (0b1000 << ((loop_count/2) % NUMBER_OF_RECEIVER));
                 updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
                 // let rx stabilize on new frequency
                 delay(40);
