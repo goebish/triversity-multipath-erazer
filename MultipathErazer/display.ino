@@ -19,6 +19,10 @@ void drawFrame()
     tft.drawFastHLine(0, 14, 160, ST7735_WHITE);
 }
 
+void locate(uint8_t x,uint8_t y, uint8_t text_size) {
+    tft.setCursor( x*6*text_size, y*8*text_size);
+}
+
 void updateMainDialog(uint8_t portion)
 {
     uint8_t i;
