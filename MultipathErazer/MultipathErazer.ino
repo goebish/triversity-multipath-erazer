@@ -18,7 +18,7 @@ enum {
     BAND_B,
     BAND_E,
     BAND_IRC,
-    BAND_RACER    
+    BAND_RACER
 };
 
 // Channels with their Mhz Values
@@ -33,7 +33,7 @@ const uint16_t channelFreqTable[] PROGMEM = {
 
 // All Channels of the above list ordered by Mhz
 const uint8_t channelList[] PROGMEM = {
-    19, 32, 18, 17, 33, 16,  7, 34,  8, 24, 
+    19, 32, 18, 17, 33, 16,  7, 34,  8, 24,
      6,  9, 25,  5, 35, 10, 26,  4, 11, 27,
      3, 36, 12, 28,  2, 13, 29, 37,  1, 14,
     30,  0, 15, 31, 38, 20, 21, 39, 22, 23
@@ -42,7 +42,7 @@ const uint8_t channelList[] PROGMEM = {
 uint16_t RSSI_Value[NUMBER_OF_RECEIVER];
 uint8_t SelectedSource = 0;
 uint8_t vbat;
-uint8_t MaxSource = 0; 
+uint8_t MaxSource = 0;
 int16_t max_rssi = 0;
 bool show_active_leds = true;
 
@@ -57,7 +57,7 @@ enum STATES{
 };
 
 static uint8_t state = STATE_MAIN;
-    
+
 void setup()
 {
     // read settings from eeprom
@@ -67,7 +67,7 @@ void setup()
     // init display
     TFT_init_display();
     // set analog reference
-    analogReference(EXTERNAL); 
+    analogReference(EXTERNAL);
     // setup leds
     DDRC |= 0b00111000; // output
     // setup pi5v331
@@ -82,16 +82,16 @@ void setup()
     BUZZ_OFF;
     // setup 250khz adc (slightly more than recommended 200 khz max setting
     //setAdcPrescaler(ADC_PS_64);
-    
+
     // splash screen
     displaySplash();
-    
+
     // start with main dialog
     initState();
 }
 
 void loop()
-{   
+{
     switch(state) {
         case STATE_MAIN:
             processMainState();
@@ -100,21 +100,21 @@ void loop()
             processCalibState();
             break;
     }
-    
+
     // save settings to eeprom
     if(saveSettings && millis() > saveSettings)
     {
         writeConfig();
         saveSettings = 0;
     }
-    
+
     // refresh vbat
     if(millis() > checkVbat) {
         checkVbat = millis() + 20000; // check every 20s
         vbat = map( analogRead(VBAT)*10, 0, 10240, 0, VBAT_FACTOR);
-        updateMainDialog(_BV(MAIN_BATTERY));        
+        updateMainDialog(_BV(MAIN_BATTERY));
     }
-    
+
     // todo: manage non blocking buzzer
 }
 
@@ -125,7 +125,7 @@ void initState()
             updateMainDialog(_BV(MAIN_INIT) | _BV(MAIN_BAND) | _BV(MAIN_CHANNEL) | _BV(MAIN_MODE) );
             break;
         case STATE_CALIB:
-            updateCalibDialog(_BV(CALIB_INIT)); 
+            updateCalibDialog(_BV(CALIB_INIT));
             break;
     }
     checkVbat = 0;
@@ -144,33 +144,33 @@ void processCalibState()
         return;
     }
     if(millis() > refresh) {
-        refresh = millis() + 1000/5; // x fps 
+        refresh = millis() + 1000/5; // x fps
         updateCalibDialog(_BV(CALIB_VALUES) | _BV(CALIB_BARS));
     }
 }
 
 void processMainState()
-{   
+{
     if(BTN_UP) { // basic calibration dialog
         shortbeep();
         state = STATE_CALIB;
         initState();
         waitButtonsRelease();
         return;
-    } else 
+    } else
     if(BTN_RIGHT || BTN_LEFT) { // change current channel
         shortbeep();
         if(BTN_RIGHT) {
             config.current_channel ++;
             if(config.current_channel > 39) {
                 config.current_channel = 0;
-            }         
+            }
         }
         else if(BTN_LEFT) {
             config.current_channel --;
             if(config.current_channel < 0) {
                 config.current_channel = 39;
-            }                
+            }
         }
         SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
         updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
@@ -187,15 +187,15 @@ void processMainState()
             }
             bool button_released=false;
             show_active_leds=false;
-            uint16_t loop_count=0;                 
+            uint16_t loop_count=0;
             while(!BTN_ANY || !button_released) {
                 config.current_channel += direction;
                 if(config.current_channel > 39) {
                     config.current_channel = 0;
-                }                    
+                }
                 if(config.current_channel < 0) {
                     config.current_channel = 39;
-                }                    
+                }
                 SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
                 // LEDs animation
                 loop_count += direction;
@@ -203,16 +203,18 @@ void processMainState()
                 updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
                 // let rx stabilize on new frequency
                 delay(40);
-                switchBestRSSI();              
+                switchBestRSSI();
                 if(max_rssi >= config.auto_threshold) {
+                    shortbeep();
+                    delay(150);
                     break;
                 }
                 if(!BTN_ANY) {
                     button_released = true;
-                }                                         
+                }
             }
             shortbeep();
-        }                
+        }
         waitButtonsRelease();
         saveSettings = millis() + 3000; // save settings 3s after last change
     }
