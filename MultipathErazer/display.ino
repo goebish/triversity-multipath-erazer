@@ -176,10 +176,10 @@ void updateMainMenu(uint8_t portion)
     }
     if(portion & _BV(MAIN_MENU_ITEMS)) {
         tft.setTextSize(2);
-        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        tft.setTextColor(ST7735_WHITE);
         tft.fillRect(6, 22 + previous_selection*26, 147, 19, ST7735_BLACK);
         centerText(pgm_read_word(&(main_menu_item[previous_selection])), 24+previous_selection*26, 2);
-        tft.setTextColor(ST7735_BLACK, ST7735_WHITE);
+        tft.setTextColor(ST7735_BLACK);
         tft.fillRect(6, 22 + current_main_menu_item*26, 147, 19, ST7735_WHITE);
         centerText(pgm_read_word(&(main_menu_item[current_main_menu_item])), 24+current_main_menu_item*26, 2);
         previous_selection = current_main_menu_item;
