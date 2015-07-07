@@ -202,7 +202,12 @@ void processMainState()
                 PORTC = (PORTC & ~0b111000) | (0b1000 << ((loop_count/2) % NUMBER_OF_RECEIVER));
                 updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
                 // let rx stabilize on new frequency
-                delay(40);
+                if(config.current_channel % 8 == 0) {
+                    shortbeep();
+                    delay(32);
+                } else {
+                    delay(40);
+                }                
                 switchBestRSSI();
                 if(max_rssi >= config.auto_threshold) {
                     shortbeep();
