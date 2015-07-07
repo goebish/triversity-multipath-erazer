@@ -127,20 +127,22 @@ void updateCalibDialog(uint8_t portion)
         for(i=0; i<NUMBER_OF_RECEIVER; i++) {
            previous_height[i] = 0;
            RSSI_Previous[i] = 0;
-           tft.setCursor( 18 + i*50, 20);
+           tft.setCursor( 18 + i*50, 27);
            tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
            tft.print("vRX");
            tft.print(i+1);
         }
     }
+    #define BARGRAPH_TOP 40
+    #define BARGRAPH_HEIGHT 60
     if(portion & _BV(CALIB_BARS)) {
         for(i=0; i<NUMBER_OF_RECEIVER; i++) {
-            uint8_t height = map(RSSI_Value[i], 0, 1023, 0, 70);
+            uint8_t height = map(RSSI_Value[i], 0, 1023, 0, BARGRAPH_HEIGHT);
             if(height != previous_height[i]) {
                 if(height > previous_height[i]) {
-                    tft.fillRect(20 + i*50, 30 + 70-height, 20, height - previous_height[i], ST7735_WHITE);
+                    tft.fillRect(20 + i*50, BARGRAPH_TOP + BARGRAPH_HEIGHT-height, 20, height - previous_height[i], ST7735_WHITE);
                 } else {
-                    tft.fillRect(20 + i*50, 30 + 70-previous_height[i], 20, previous_height[i] - height, ST7735_BLACK);
+                    tft.fillRect(20 + i*50, BARGRAPH_TOP + BARGRAPH_HEIGHT-previous_height[i], 20, previous_height[i] - height, ST7735_BLACK);
                 }
                 previous_height[i] = height;
             }
