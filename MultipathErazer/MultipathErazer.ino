@@ -230,6 +230,7 @@ void processMainState()
         show_active_leds = true;
         refreshTitle();
     }
+    switchBestRSSI();
 }
 
 void switchBestRSSI()
