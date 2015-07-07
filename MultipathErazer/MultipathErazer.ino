@@ -227,10 +227,9 @@ void processMainState()
         }
         waitButtonsRelease();
         saveSettings = millis() + 3000; // save settings 3s after last change
+        show_active_leds = true;
+        refreshTitle();
     }
-    show_active_leds = true;
-    refreshTitle();
-    switchBestRSSI();
 }
 
 void switchBestRSSI()
