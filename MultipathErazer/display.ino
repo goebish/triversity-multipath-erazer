@@ -102,6 +102,10 @@ void updateCalibDialog(uint8_t portion)
     static uint16_t RSSI_Previous[NUMBER_OF_RECEIVER];
     uint8_t i;
     if(portion & _BV(CALIB_INIT)) {
+        for(i=0; i<NUMBER_OF_RECEIVER; i++) {
+           previous_height[i] = 0;
+           RSSI_Previous[i] = 0; 
+        }
         drawFrame();
     }
     tft.setTextColor(ST7735_WHITE);
