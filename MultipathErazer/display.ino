@@ -5,12 +5,6 @@
 #include <PDQ_GFX.h>			// PDQ: Core graphics library
 #include <PDQ_ST7735.h>			// PDQ: Hardware-specific driver library
 
-// dialog titles (must be sync with e_STATES)
-PGM_P const dialog_title[] PROGMEM = {
-    "Select Channel",
-    "RSSI levels   ",
-};
-
 void TFT_init_display()
 {
     tft.begin();						// initialize LCD
@@ -39,6 +33,14 @@ void refreshTitle()
 
 void locate(uint8_t x,uint8_t y, uint8_t text_size) {
     tft.setCursor( x*6*text_size, y*8*text_size);
+}
+
+void centerText(uint_farptr_t str, uint8_t y, uint8_t textSize)
+{
+    int8_t x = (SCREEN_WIDTH/2)-((strlen((PGM_P)str)*6*textSize)/2);
+    tft.setTextSize(textSize);
+    tft.setCursor(x,y);
+    tft.print((char*)str);
 }
 
 void updateMainDialog(uint8_t portion)
@@ -160,16 +162,29 @@ void updateCalibDialog(uint8_t portion)
     }
 }
 
-// menu items
-/*PGM_P const menu[]  PROGMEM = {
-    "Settings",
-    "Exit",
-    "Display",
-    "Adjust",
-    "Factory reset",
-    "Factory reset"};
-#define numMenu (sizeof(menu)/sizeof(char *))-1 //array size*/
-//tft.println((char *)pgm_read_word(&(menu[i])));
+void updateMainMenu(uint8_t portion)
+{
+    uint8_t i;
+    static uint8_t previous_selection = MAIN_MENU_EXIT;
+    if(portion & _BV(MAIN_MENU_INIT)) {
+        clearFrame();
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        tft.setTextSize(2);
+        for (i=0; i<MAIN_MENU_ITEMS; i++) {
+            centerText(pgm_read_word(&(main_menu_item[i])), 24+i*26, 2);
+        }
+    }
+    if(portion & _BV(MAIN_MENU_ITEMS)) {
+        tft.setTextSize(2);
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        tft.fillRect(6, 22 + previous_selection*26, 147, 19, ST7735_BLACK);
+        centerText(pgm_read_word(&(main_menu_item[previous_selection])), 24+previous_selection*26, 2);
+        tft.setTextColor(ST7735_BLACK, ST7735_WHITE);
+        tft.fillRect(6, 22 + current_main_menu_item*26, 147, 19, ST7735_WHITE);
+        centerText(pgm_read_word(&(main_menu_item[current_main_menu_item])), 24+current_main_menu_item*26, 2);
+        previous_selection = current_main_menu_item;
+    }
+}
 
 void displaySplash()
 {

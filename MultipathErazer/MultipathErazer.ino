@@ -45,6 +45,7 @@ uint8_t vbat;
 uint8_t MaxSource = 0;
 int16_t max_rssi = 0;
 bool show_active_leds = true;
+uint8_t current_main_menu_item;
 
 // timers
 uint32_t saveSettings = 0;
@@ -52,6 +53,7 @@ uint32_t checkVbat = 0;
 
 enum e_STATES{
     STATE_MAIN, // main diversity dialog
+    STATE_MAIN_MENU,
     STATE_CALIB // bar graph
 };
 
@@ -98,6 +100,9 @@ void loop()
         case STATE_CALIB:
             processCalibState();
             break;
+        case STATE_MAIN_MENU:
+            processMainMenu();
+            break;
     }
 
     // save settings to eeprom
@@ -114,6 +119,7 @@ void loop()
         updateMainDialog(_BV(MAIN_BATTERY));
     }
 
+    switchBestRSSI();
     // todo: manage non blocking buzzer
 }
 
@@ -126,6 +132,10 @@ void initState()
         case STATE_CALIB:
             updateCalibDialog(_BV(CALIB_INIT));
             break;
+        case STATE_MAIN_MENU:
+            current_main_menu_item = MAIN_MENU_EXIT;
+            updateMainMenu(_BV(MAIN_MENU_INIT) | _BV(MAIN_MENU_ITEMS));
+            break;
     }
     refreshTitle();
 }
@@ -133,8 +143,7 @@ void initState()
 void processCalibState()
 {
     static uint32_t refresh;
-    switchBestRSSI();
-    if(BTN_UP) // return to main dialog
+    if(BTN_ANY) // return to main dialog
     {
         shortbeep();
         state = STATE_MAIN;
@@ -148,11 +157,41 @@ void processCalibState()
     }
 }
 
+void processMainMenu()
+{
+    if(BTN_UP || BTN_DOWN) {
+        if(BTN_UP && current_main_menu_item > 0) {
+            shortbeep();
+            current_main_menu_item --;
+            updateMainMenu(_BV(MAIN_MENU_ITEMS));
+        } else
+        if(BTN_DOWN && current_main_menu_item < MAIN_MENU_ITEMS-1) {
+            shortbeep();
+            current_main_menu_item ++;
+            updateMainMenu(_BV(MAIN_MENU_ITEMS));
+        }
+        waitButtonsRelease();
+    } else
+    if(BTN_LEFT || BTN_RIGHT) {
+        shortbeep();
+        switch(current_main_menu_item) {
+            case MAIN_MENU_EXIT:
+                state = STATE_MAIN;
+                break;
+            case MAIN_MENU_LEVELS:
+                state = STATE_CALIB;
+                break;
+        }
+        waitButtonsRelease();
+        initState();  
+    }
+}
+
 void processMainState()
 {
-    if(BTN_UP) { // basic calibration dialog
+    if(BTN_UP || BTN_DOWN) { // main menu
         shortbeep();
-        state = STATE_CALIB;
+        state = STATE_MAIN_MENU; // STATE_CALIB;
         initState();
         waitButtonsRelease();
         return;
@@ -230,7 +269,6 @@ void processMainState()
         show_active_leds = true;
         refreshTitle();
     }
-    switchBestRSSI();
 }
 
 void switchBestRSSI()
