@@ -180,6 +180,10 @@ void processMainState()
         }
         // long press = auto scan
         if(BTN_ANY && max_rssi < config.auto_threshold) {
+            tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+            tft.setTextSize(1);
+            tft.setCursor(5,4);
+            tft.print(F("Searching ... "));
             int8_t direction=1;
             if(BTN_LEFT) {
                 direction = -1;
@@ -225,6 +229,7 @@ void processMainState()
         saveSettings = millis() + 3000; // save settings 3s after last change
     }
     show_active_leds = true;
+    refreshTitle();
     switchBestRSSI();
 }
 
