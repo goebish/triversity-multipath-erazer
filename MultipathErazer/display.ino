@@ -14,9 +14,13 @@ void TFT_init_display()
 
 void drawFrame()
 {
-    tft.fillScreen(ST7735_BLACK);
     tft.drawRect(0,0,160,128,ST7735_WHITE);
     tft.drawFastHLine(0, 14, 160, ST7735_WHITE);
+}
+
+void clearFrame()
+{
+    tft.fillRect(1, 15, 158, 111, ST7735_BLACK);
 }
 
 void locate(uint8_t x,uint8_t y, uint8_t text_size) {
@@ -29,6 +33,7 @@ void updateMainDialog(uint8_t portion)
     tft.setTextColor(ST7735_WHITE);
     if(portion & _BV(MAIN_INIT)) { // frame & static labels
         drawFrame();
+        clearFrame();
         tft.setTextSize(2);
         tft.setCursor(10,20);
         tft.print(F("Band: "));
@@ -101,14 +106,19 @@ void updateCalibDialog(uint8_t portion)
     static uint8_t previous_height[NUMBER_OF_RECEIVER];
     static uint16_t RSSI_Previous[NUMBER_OF_RECEIVER];
     uint8_t i;
+    tft.setTextColor(ST7735_WHITE);
+    tft.setTextSize(1);
     if(portion & _BV(CALIB_INIT)) {
+        clearFrame();
         for(i=0; i<NUMBER_OF_RECEIVER; i++) {
            previous_height[i] = 0;
-           RSSI_Previous[i] = 0; 
+           RSSI_Previous[i] = 0;
+           tft.setCursor( 18 + i*50, 20); 
+           tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+           tft.print("vRX");
+           tft.print(i+1);
         }
-        drawFrame();
     }
-    tft.setTextColor(ST7735_WHITE);
     if(portion & _BV(CALIB_BARS)) {
         for(i=0; i<NUMBER_OF_RECEIVER; i++) {
             uint8_t height = map(RSSI_Value[i], 0, 1023, 0, 70);
@@ -123,7 +133,6 @@ void updateCalibDialog(uint8_t portion)
         }
     }
     if(portion & _BV(CALIB_VALUES)) {
-         tft.setTextSize(1);
          for(i=0; i<NUMBER_OF_RECEIVER; i++) {
              if( RSSI_Value[i] != RSSI_Previous[i]) {
                  tft.fillRect(22 + i*50, 110, 24, 7, ST7735_BLACK);

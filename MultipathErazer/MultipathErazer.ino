@@ -128,7 +128,6 @@ void initState()
             updateCalibDialog(_BV(CALIB_INIT));
             break;
     }
-    checkVbat = 0;
 }
 
 void processCalibState()
@@ -203,7 +202,7 @@ void processMainState()
                 updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
                 // let rx stabilize on new frequency
                 if(config.current_channel % 8 == 0) {
-                    shortbeep();
+                    shortbeep(); // beep on band change
                     delay(32);
                 } else {
                     delay(40);
