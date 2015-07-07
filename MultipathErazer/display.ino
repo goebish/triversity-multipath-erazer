@@ -49,17 +49,17 @@ void updateMainDialog(uint8_t portion)
         drawFrame();
         clearFrame();
         tft.setTextSize(2);
-        tft.setCursor(10,20);
+        tft.setCursor(10,30);
         tft.print(F("Band: "));
         tft.setCursor(10, 45);
         for(i=0; i<8; i++) {
-            tft.setCursor(12 + i*18 , 45);
+            tft.setCursor(12 + i*18 , 60);
             tft.print(i+1);
         }
     }
 
     if(portion & _BV(MAIN_BAND)) { // band name
-        tft.setCursor(10+10+12*5, 20);
+        tft.setCursor(10+10+12*5, 30);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
         switch(config.current_channel/8) {
@@ -84,15 +84,15 @@ void updateMainDialog(uint8_t portion)
     if(portion & _BV(MAIN_CHANNEL)) { // channel # + freq
         // draw rectangle around current channel #
         for(i=0; i<8; i++) {
-            tft.drawRect(10 + i*18, 43, 14, 18, ST7735_BLACK);
-            tft.drawRect( 9 + i*18, 42, 16, 20, ST7735_BLACK);
+            tft.drawRect(10 + i*18, 58, 14, 18, ST7735_BLACK);
+            tft.drawRect( 9 + i*18, 57, 16, 20, ST7735_BLACK);
         }
-        tft.drawRect(10 + (config.current_channel%8)*18, 43, 14, 18, ST7735_GREEN);
-        tft.drawRect( 9 + (config.current_channel%8)*18, 42, 16, 20, ST7735_GREEN);
+        tft.drawRect(10 + (config.current_channel%8)*18, 58, 14, 18, ST7735_GREEN);
+        tft.drawRect( 9 + (config.current_channel%8)*18, 57, 16, 20, ST7735_GREEN);
         // frequency
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
-        tft.setCursor(35, 75);
+        tft.setCursor(35, 95);
         tft.print(pgm_read_word_near(channelFreqTable + config.current_channel));
         tft.print(F(" MHz"));
     }
@@ -159,14 +159,14 @@ void updateCalibDialog(uint8_t portion)
 }
 
 // menu items
-PGM_P const menu[]  PROGMEM = {
+/*PGM_P const menu[]  PROGMEM = {
     "Settings",
     "Exit",
     "Display",
     "Adjust",
     "Factory reset",
     "Factory reset"};
-#define numMenu (sizeof(menu)/sizeof(char *))-1 //array size
+#define numMenu (sizeof(menu)/sizeof(char *))-1 //array size*/
 //tft.println((char *)pgm_read_word(&(menu[i])));
 
 void displaySplash()
