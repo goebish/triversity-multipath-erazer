@@ -206,7 +206,9 @@ void processMainState()
                 switchBestRSSI();
                 if(max_rssi >= config.auto_threshold) {
                     shortbeep();
-                    delay(150);
+                    delay(100);
+                    shortbeep();
+                    delay(100);
                     break;
                 }
                 if(!BTN_ANY) {
