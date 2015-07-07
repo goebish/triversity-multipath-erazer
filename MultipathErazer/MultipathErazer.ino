@@ -50,8 +50,7 @@ bool show_active_leds = true;
 uint32_t saveSettings = 0;
 uint32_t checkVbat = 0;
 
-enum STATES{
-    STATE_SPLASH,
+enum e_STATES{
     STATE_MAIN, // main diversity dialog
     STATE_CALIB // bar graph
 };
@@ -128,6 +127,7 @@ void initState()
             updateCalibDialog(_BV(CALIB_INIT));
             break;
     }
+    refreshTitle();
 }
 
 void processCalibState()
@@ -206,7 +206,7 @@ void processMainState()
                     delay(32);
                 } else {
                     delay(40);
-                }                
+                }
                 switchBestRSSI();
                 if(max_rssi >= config.auto_threshold) {
                     shortbeep();

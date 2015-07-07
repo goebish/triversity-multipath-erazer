@@ -5,6 +5,12 @@
 #include <PDQ_GFX.h>			// PDQ: Core graphics library
 #include <PDQ_ST7735.h>			// PDQ: Hardware-specific driver library
 
+// dialog titles (must be sync with e_STATES)
+PGM_P const dialog_title[] PROGMEM = {
+    "Select Channel",
+    "RSSI levels   ",
+};
+
 void TFT_init_display()
 {
     tft.begin();						// initialize LCD
@@ -21,6 +27,14 @@ void drawFrame()
 void clearFrame()
 {
     tft.fillRect(1, 15, 158, 111, ST7735_BLACK);
+}
+
+void refreshTitle()
+{
+    tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+    tft.setTextSize(1);
+    tft.setCursor(5,4);
+    tft.println((char *)pgm_read_word(&(dialog_title[state])));
 }
 
 void locate(uint8_t x,uint8_t y, uint8_t text_size) {
@@ -43,7 +57,7 @@ void updateMainDialog(uint8_t portion)
             tft.print(i+1);
         }
     }
-    
+
     if(portion & _BV(MAIN_BAND)) { // band name
         tft.setCursor(10+10+12*5, 20);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
@@ -66,13 +80,13 @@ void updateMainDialog(uint8_t portion)
                 break;
         }
     }
-    
+
     if(portion & _BV(MAIN_CHANNEL)) { // channel # + freq
         // draw rectangle around current channel #
         for(i=0; i<8; i++) {
             tft.drawRect(10 + i*18, 43, 14, 18, ST7735_BLACK);
             tft.drawRect( 9 + i*18, 42, 16, 20, ST7735_BLACK);
-        }        
+        }
         tft.drawRect(10 + (config.current_channel%8)*18, 43, 14, 18, ST7735_GREEN);
         tft.drawRect( 9 + (config.current_channel%8)*18, 42, 16, 20, ST7735_GREEN);
         // frequency
@@ -82,7 +96,7 @@ void updateMainDialog(uint8_t portion)
         tft.print(pgm_read_word_near(channelFreqTable + config.current_channel));
         tft.print(F(" MHz"));
     }
-    
+
     if(portion & _BV(MAIN_BATTERY)) { // battery voltage
         tft.fillRect(120, 4, 36, 7, ST7735_BLACK);
         tft.setCursor(120, 4);
@@ -113,7 +127,7 @@ void updateCalibDialog(uint8_t portion)
         for(i=0; i<NUMBER_OF_RECEIVER; i++) {
            previous_height[i] = 0;
            RSSI_Previous[i] = 0;
-           tft.setCursor( 18 + i*50, 20); 
+           tft.setCursor( 18 + i*50, 20);
            tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
            tft.print("vRX");
            tft.print(i+1);
@@ -128,8 +142,8 @@ void updateCalibDialog(uint8_t portion)
                 } else {
                     tft.fillRect(20 + i*50, 30 + 70-previous_height[i], 20, previous_height[i] - height, ST7735_BLACK);
                 }
-                previous_height[i] = height;  
-            }                      
+                previous_height[i] = height;
+            }
         }
     }
     if(portion & _BV(CALIB_VALUES)) {
@@ -139,7 +153,7 @@ void updateCalibDialog(uint8_t portion)
                  tft.setCursor(22+ i*50, 110);
                  tft.print(RSSI_Value[i]);
                  RSSI_Previous[i] = RSSI_Value[i];
-             }             
+             }
          }
     }
 }
