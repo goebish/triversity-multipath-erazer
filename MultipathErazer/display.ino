@@ -197,6 +197,9 @@ void displaySplash()
     tft.print(F("Erazer"));
     for(uint8_t i=0; i<30; i++) {
         PORTC = (PORTC & ~0b111000) | (0b1000 << (i % 3));
+        if(i>26) {
+            shortbeep();
+        }
         delay(80);
     }
 }
