@@ -12,15 +12,6 @@ PDQ_ST7735 tft;
 
 const unsigned char RSSI_Pin[3] = { A2, A1, A0}; //Analog Pin
 
-// bands
-enum {
-    BAND_A = 0,
-    BAND_B,
-    BAND_E,
-    BAND_IRC,
-    BAND_RACER
-};
-
 // Channels with their Mhz Values
 const uint16_t channelFreqTable[] PROGMEM = {
     // Channel 1 - 8
@@ -128,22 +119,42 @@ void initState()
     switch(state) {
         case STATE_MAIN:
             updateMainDialog(_BV(MAIN_INIT) | _BV(MAIN_BAND) | _BV(MAIN_CHANNEL) | _BV(MAIN_MODE) );
+            refreshTitle();
             break;
         case STATE_CALIB:
-            updateCalibDialog(_BV(CALIB_INIT));
+            updateCalibDialog(_BV(CALIB_INIT) | _BV(CALIB_HEADER));
             break;
         case STATE_MAIN_MENU:
             current_main_menu_item = MAIN_MENU_EXIT;
             updateMainMenu(_BV(MAIN_MENU_INIT) | _BV(MAIN_MENU_ITEMS));
+            refreshTitle();
             break;
     }
-    refreshTitle();
+    
 }
 
 void processCalibState()
 {
     static uint32_t refresh;
-    if(BTN_ANY) // return to main dialog
+    if(BTN_RIGHT || BTN_LEFT) { // change current channel
+        shortbeep();
+        if(BTN_RIGHT) {
+            config.current_channel ++;
+            if(config.current_channel > 39) {
+                config.current_channel = 0;
+            }
+        }
+        else if(BTN_LEFT) {
+            config.current_channel --;
+            if(config.current_channel < 0) {
+                config.current_channel = 39;
+            }
+        }
+        SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
+        updateCalibDialog(_BV(CALIB_HEADER));
+        waitButtonsRelease();
+    } else    
+    if(BTN_DOWN || BTN_UP) // return to main dialog
     {
         shortbeep();
         state = STATE_MAIN;
@@ -183,7 +194,7 @@ void processMainMenu()
                 break;
         }
         waitButtonsRelease();
-        initState();  
+        initState();
     }
 }
 

@@ -19,6 +19,7 @@ enum e_CALIB_DIALOG{
     CALIB_INIT = 0,
     CALIB_VALUES,
     CALIB_BARS,
+    CALIB_HEADER,
 };
 
 enum e_MAIN_MENU_DIALOG{
@@ -26,9 +27,33 @@ enum e_MAIN_MENU_DIALOG{
     MAIN_MENU_ITEMS,
 };
 
+/////////////////////
+// Bands
+
+enum {
+    BAND_A = 0,
+    BAND_B,
+    BAND_E,
+    BAND_IRC,
+    BAND_RACER
+};
+
+PGM_P const short_band_name[] PROGMEM = {
+    "A\0","B\0","E\0","F\0","R\0"
+};
+
+PGM_P const long_band_name[] PROGMEM = {
+    "A     ",
+    "B     ",
+    "E     ",
+    "IRC/FS",
+    "Racer "
+};
+
 ////////////////////
 // dialog titles
 // (must be in sync with e_STATES)
+
 PGM_P const dialog_title[] PROGMEM = {
     "Channel       ",
     "Main menu     ",

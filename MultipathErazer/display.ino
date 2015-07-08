@@ -25,7 +25,8 @@ void clearFrame()
 
 void refreshTitle()
 {
-    tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+    tft.fillRect( 5, 4, 110, 7, ST7735_BLACK);
+    tft.setTextColor(ST7735_WHITE);
     tft.setTextSize(1);
     tft.setCursor(5,4);
     tft.println((char *)pgm_read_word(&(dialog_title[state])));
@@ -64,23 +65,7 @@ void updateMainDialog(uint8_t portion)
         tft.setCursor(10+10+12*5, 30);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
-        switch(config.current_channel/8) {
-            case BAND_A:
-                tft.print(F("A     "));
-                break;
-            case BAND_B:
-                tft.print(F("B     "));
-                break;
-            case BAND_E:
-                tft.print(F("E     "));
-                break;
-            case BAND_IRC:
-                tft.print(F("IRC/FS"));
-                break;
-            case BAND_RACER:
-                tft.print(F("Racer "));
-                break;
-        }
+        tft.println((char *)pgm_read_word(&(long_band_name[config.current_channel/8])));
     }
 
     if(portion & _BV(MAIN_CHANNEL)) { // channel # + freq
@@ -134,6 +119,16 @@ void updateCalibDialog(uint8_t portion)
            tft.print("vRX");
            tft.print(i+1);
         }
+    }
+    if(portion & _BV(CALIB_HEADER)) {
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        tft.setTextSize(1);
+        tft.setCursor(5,4);
+        tft.print("RSSI   ");
+        tft.print((char *)pgm_read_word(&(short_band_name[config.current_channel/8])));
+        tft.print((config.current_channel%8)+1);
+        tft.print("   ");
+        tft.print(pgm_read_word_near(channelFreqTable + config.current_channel));
     }
     #define BARGRAPH_TOP 40
     #define BARGRAPH_HEIGHT 60
