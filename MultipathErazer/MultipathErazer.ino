@@ -43,9 +43,11 @@ uint32_t saveSettings = 0;
 uint32_t checkVbat = 0;
 
 enum e_STATES{
-    STATE_MAIN, // main diversity dialog
-    STATE_MAIN_MENU,
-    STATE_CALIB // bar graph
+    STATE_MAIN,      // channel selection
+    STATE_MAIN_MENU, // main menu
+    STATE_CALIB,     // bar graph
+    STATE_SCANNER,   // band scanner
+    STATE_SETTINGS,  // settings menu
 };
 
 static uint8_t state = STATE_MAIN;
@@ -130,7 +132,7 @@ void initState()
             refreshTitle();
             break;
     }
-    
+
 }
 
 void processCalibState()
@@ -138,7 +140,7 @@ void processCalibState()
     static uint32_t refresh;
     if(BTN_RIGHT || BTN_LEFT) { // change current channel
         changeChannel();
-    } else    
+    } else
     if(BTN_DOWN || BTN_UP) // return to main dialog
     {
         shortbeep();
@@ -183,7 +185,6 @@ void processMainMenu()
     }
 }
 
-
 // previous / next channel, long press = auto search
 void changeChannel()
 {
@@ -208,7 +209,7 @@ void changeChannel()
             case STATE_CALIB:
                 updateCalibDialog(_BV(CALIB_HEADER));
                 break;
-        }        
+        }
         uint8_t autoRepeat = 4;
         while(BTN_ANY && autoRepeat--) {
             delay(40);
@@ -218,9 +219,15 @@ void changeChannel()
         if(BTN_ANY && max_rssi < config.auto_threshold) {
             tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
             tft.setTextSize(1);
-            tft.setCursor(5,4);
-            if(state == STATE_MAIN)
-                tft.print(F("Searching ... "));
+            switch(state) {
+                case STATE_MAIN:
+                    tft.setCursor(5,4);
+                    break;
+                case STATE_CALIB:
+                    tft.setCursor(40, 43);
+                    break;
+            }
+            tft.print(F("Searching ... "));                
             int8_t direction=1;
             if(BTN_LEFT) {
                 direction = -1;
@@ -245,7 +252,7 @@ void changeChannel()
                         updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
                         break;
                     case STATE_CALIB:
-                        updateCalibDialog(_BV(CALIB_HEADER));
+                        updateCalibDialog(_BV(CALIB_BARS) | _BV(CALIB_VALUES) | _BV(CALIB_HEADER));
                         break;
                 }
                 // let rx stabilize on new frequency
@@ -267,8 +274,12 @@ void changeChannel()
                     button_released = true;
                 }
             }
-            if(state == STATE_MAIN)
+            if(state == STATE_MAIN) {
                 refreshTitle();
+            }                
+            else if(state == STATE_CALIB) {
+                tft.fillRect(40, 43, 100, 8, ST7735_BLACK);
+            }     
             shortbeep();
         }
         waitButtonsRelease();

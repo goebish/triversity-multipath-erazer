@@ -58,6 +58,7 @@ PGM_P const dialog_title[] PROGMEM = {
     "Channel",
     "Main menu",
     "RSSI",
+    "Band scanner",
 };
 
 ///////////////////
