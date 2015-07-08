@@ -25,7 +25,7 @@ void clearFrame()
 
 void refreshTitle()
 {
-    tft.fillRect( 5, 4, 110, 7, ST7735_BLACK);
+    tft.fillRect( 5, 4, 110, 8, ST7735_BLACK);
     tft.setTextColor(ST7735_WHITE);
     tft.setTextSize(1);
     tft.setCursor(5,4);
@@ -124,10 +124,10 @@ void updateCalibDialog(uint8_t portion)
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(1);
         tft.setCursor(5,4);
-        tft.print("RSSI   ");
+        tft.print("RSSI    ");
         tft.print((char *)pgm_read_word(&(short_band_name[config.current_channel/8])));
         tft.print((config.current_channel%8)+1);
-        tft.print("   ");
+        tft.print("  ");
         tft.print(pgm_read_word_near(channelFreqTable + config.current_channel));
     }
     #define BARGRAPH_TOP 40

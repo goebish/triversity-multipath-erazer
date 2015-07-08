@@ -39,7 +39,7 @@ enum {
 };
 
 PGM_P const short_band_name[] PROGMEM = {
-    "A\0","B\0","E\0","F\0","R\0"
+    "A","B","E","F","R"
 };
 
 PGM_P const long_band_name[] PROGMEM = {
@@ -55,9 +55,9 @@ PGM_P const long_band_name[] PROGMEM = {
 // (must be in sync with e_STATES)
 
 PGM_P const dialog_title[] PROGMEM = {
-    "Channel       ",
-    "Main menu     ",
-    "RSSI levels   ",
+    "Channel",
+    "Main menu",
+    "RSSI",
 };
 
 ///////////////////

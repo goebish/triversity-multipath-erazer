@@ -137,22 +137,7 @@ void processCalibState()
 {
     static uint32_t refresh;
     if(BTN_RIGHT || BTN_LEFT) { // change current channel
-        shortbeep();
-        if(BTN_RIGHT) {
-            config.current_channel ++;
-            if(config.current_channel > 39) {
-                config.current_channel = 0;
-            }
-        }
-        else if(BTN_LEFT) {
-            config.current_channel --;
-            if(config.current_channel < 0) {
-                config.current_channel = 39;
-            }
-        }
-        SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
-        updateCalibDialog(_BV(CALIB_HEADER));
-        waitButtonsRelease();
+        changeChannel();
     } else    
     if(BTN_DOWN || BTN_UP) // return to main dialog
     {
@@ -198,16 +183,10 @@ void processMainMenu()
     }
 }
 
-void processMainState()
+
+// previous / next channel, long press = auto search
+void changeChannel()
 {
-    if(BTN_UP || BTN_DOWN) { // main menu
-        shortbeep();
-        state = STATE_MAIN_MENU; // STATE_CALIB;
-        initState();
-        waitButtonsRelease();
-        return;
-    } else
-    if(BTN_RIGHT || BTN_LEFT) { // change current channel
         shortbeep();
         if(BTN_RIGHT) {
             config.current_channel ++;
@@ -222,7 +201,14 @@ void processMainState()
             }
         }
         SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
-        updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
+        switch(state) {
+            case STATE_MAIN:
+                updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
+                break;
+            case STATE_CALIB:
+                updateCalibDialog(_BV(CALIB_HEADER));
+                break;
+        }        
         uint8_t autoRepeat = 4;
         while(BTN_ANY && autoRepeat--) {
             delay(40);
@@ -233,7 +219,8 @@ void processMainState()
             tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
             tft.setTextSize(1);
             tft.setCursor(5,4);
-            tft.print(F("Searching ... "));
+            if(state == STATE_MAIN)
+                tft.print(F("Searching ... "));
             int8_t direction=1;
             if(BTN_LEFT) {
                 direction = -1;
@@ -253,12 +240,19 @@ void processMainState()
                 // LEDs animation
                 loop_count += direction;
                 PORTC = (PORTC & ~0b111000) | (0b1000 << ((loop_count/2) % NUMBER_OF_RECEIVER));
-                updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
+                switch(state) {
+                    case STATE_MAIN:
+                        updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
+                        break;
+                    case STATE_CALIB:
+                        updateCalibDialog(_BV(CALIB_HEADER));
+                        break;
+                }
                 // let rx stabilize on new frequency
                 if(config.current_channel % 8 == 0) {
                     shortbeep(); // beep on band change
                     delay(32);
-                } else {
+                    } else {
                     delay(40);
                 }
                 switchBestRSSI();
@@ -273,12 +267,26 @@ void processMainState()
                     button_released = true;
                 }
             }
+            if(state == STATE_MAIN)
+                refreshTitle();
             shortbeep();
         }
         waitButtonsRelease();
         saveSettings = millis() + 3000; // save settings 3s after last change
         show_active_leds = true;
-        refreshTitle();
+}
+
+void processMainState()
+{
+    if(BTN_UP || BTN_DOWN) { // main menu
+        shortbeep();
+        state = STATE_MAIN_MENU; // STATE_CALIB;
+        initState();
+        waitButtonsRelease();
+        return;
+    } else
+    if(BTN_RIGHT || BTN_LEFT) { // change current channel
+        changeChannel();
     }
 }
 
