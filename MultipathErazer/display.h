@@ -27,10 +27,10 @@ enum e_MAIN_MENU_DIALOG{
 };
 
 ////////////////////
-// dialog titles 
+// dialog titles
 // (must be in sync with e_STATES)
 PGM_P const dialog_title[] PROGMEM = {
-    "Select Channel",
+    "Channel       ",
     "Main menu     ",
     "RSSI levels   ",
 };
