@@ -50,6 +50,7 @@ void updateMainDialog(uint8_t portion)
     tft.setTextColor(ST7735_WHITE);
     if(portion & _BV(MAIN_INIT)) { // frame & static labels
         drawFrame();
+        refreshTitle();
         clearFrame();
         tft.setTextSize(2);
         tft.setCursor(10,30);
@@ -162,6 +163,7 @@ void updateMainMenu(uint8_t portion)
     uint8_t i;
     static uint8_t previous_selection = MAIN_MENU_EXIT;
     if(portion & _BV(MAIN_MENU_INIT)) {
+        refreshTitle();
         clearFrame();
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
@@ -178,6 +180,30 @@ void updateMainMenu(uint8_t portion)
         tft.fillRect(6, 22 + current_main_menu_item*26, 147, 19, ST7735_WHITE);
         centerText(pgm_read_word(&(main_menu_item[current_main_menu_item])), 24+current_main_menu_item*26, 2);
         previous_selection = current_main_menu_item;
+    }
+}
+
+void updateSettingsMenuDialog(uint8_t portion) {
+    if(portion & _BV(SETTINGS_MENU_INIT)) {
+        refreshTitle();
+        clearFrame();
+        
+        locate(1,4,2);
+        tft.setTextSize(2);
+        tft.setTextColor(ST7735_WHITE);
+        tft.print(F("Coming soon"));
+    }
+}
+
+void updateScannerDialog(uint8_t portion) {
+    if(portion & _BV(SCANNER_INIT)) {
+        refreshTitle();
+        clearFrame();
+        
+        locate(1,4,2);
+        tft.setTextSize(2);
+        tft.setTextColor(ST7735_WHITE);
+        tft.print(F("Coming soon"));
     }
 }
 

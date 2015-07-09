@@ -47,7 +47,7 @@ enum e_STATES{
     STATE_MAIN_MENU, // main menu
     STATE_CALIB,     // bar graph
     STATE_SCANNER,   // band scanner
-    STATE_SETTINGS,  // settings menu
+    STATE_SETTINGS_MENU,  // settings menu
 };
 
 static uint8_t state = STATE_MAIN;
@@ -96,6 +96,12 @@ void loop()
         case STATE_MAIN_MENU:
             processMainMenu();
             break;
+        case STATE_SCANNER:
+            processScanner();
+            break;
+        case STATE_SETTINGS_MENU:
+            processSettingsMenu();
+            break;
     }
 
     // save settings to eeprom
@@ -121,7 +127,6 @@ void initState()
     switch(state) {
         case STATE_MAIN:
             updateMainDialog(_BV(MAIN_INIT) | _BV(MAIN_BAND) | _BV(MAIN_CHANNEL) | _BV(MAIN_MODE) );
-            refreshTitle();
             break;
         case STATE_CALIB:
             updateCalibDialog(_BV(CALIB_INIT) | _BV(CALIB_HEADER));
@@ -129,10 +134,36 @@ void initState()
         case STATE_MAIN_MENU:
             current_main_menu_item = MAIN_MENU_EXIT;
             updateMainMenu(_BV(MAIN_MENU_INIT) | _BV(MAIN_MENU_ITEMS));
-            refreshTitle();
+            break;
+        case STATE_SCANNER:
+            updateScannerDialog(_BV(SCANNER_INIT));
+            break;
+        case STATE_SETTINGS_MENU:
+            updateSettingsMenuDialog(_BV(SETTINGS_MENU_INIT));
             break;
     }
+}
 
+void processSettingsMenu()
+{
+    if(BTN_ANY) {
+        shortbeep();
+        state = STATE_MAIN;
+        initState();
+        waitButtonsRelease();
+        return;
+    }
+}
+
+void processScanner()
+{
+    if(BTN_ANY) {
+        shortbeep();
+        state = STATE_MAIN;
+        initState();
+        waitButtonsRelease();
+        return;
+    }
 }
 
 void processCalibState()
@@ -178,6 +209,12 @@ void processMainMenu()
                 break;
             case MAIN_MENU_LEVELS:
                 state = STATE_CALIB;
+                break;
+            case MAIN_MENU_SCANNER:
+                state = STATE_SCANNER;
+                break;
+            case MAIN_MENU_SETTINGS:
+                state = STATE_SETTINGS_MENU;
                 break;
         }
         waitButtonsRelease();
@@ -227,7 +264,7 @@ void changeChannel()
                     tft.setCursor(40, 43);
                     break;
             }
-            tft.print(F("Searching ... "));                
+            tft.print(F("Searching ... "));
             int8_t direction=1;
             if(BTN_LEFT) {
                 direction = -1;
@@ -276,10 +313,10 @@ void changeChannel()
             }
             if(state == STATE_MAIN) {
                 refreshTitle();
-            }                
+            }
             else if(state == STATE_CALIB) {
                 tft.fillRect(40, 43, 100, 8, ST7735_BLACK);
-            }     
+            }
             shortbeep();
         }
         waitButtonsRelease();

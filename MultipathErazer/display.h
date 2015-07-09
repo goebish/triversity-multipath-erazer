@@ -27,6 +27,15 @@ enum e_MAIN_MENU_DIALOG{
     MAIN_MENU_ITEMS,
 };
 
+enum e_SETTINGS_MENU_DIALOG{
+    SETTINGS_MENU_INIT,
+    SETTINGS_MENU_ITEMS,
+};
+
+enum e_SCANNER_DIALOG{
+    SCANNER_INIT,
+};
+
 /////////////////////
 // Bands
 
@@ -59,6 +68,7 @@ PGM_P const dialog_title[] PROGMEM = {
     "Main menu",
     "RSSI",
     "Band scanner",
+    "Settings"
 };
 
 ///////////////////
