@@ -6,6 +6,7 @@
 typedef struct{
     int8_t      current_channel; // 0 - 39
     uint16_t    auto_threshold;
+    uint8_t     vbat_alarm;
     uint32_t    marker;
 }s_conf;
 
@@ -19,6 +20,7 @@ void resetConfig() {
     uint8_t i;
     config.current_channel = 0;
     config.auto_threshold = 800;
+    config.vbat_alarm = 110;
     config.marker = EEPROM_MARKER;
     writeConfig();
 }

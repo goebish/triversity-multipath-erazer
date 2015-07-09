@@ -118,8 +118,8 @@ void loop()
         updateMainDialog(_BV(MAIN_BATTERY));
     }
 
+    alarmBeep();
     switchBestRSSI();
-    // todo: manage non blocking buzzer
 }
 
 void initState()
@@ -310,6 +310,7 @@ void changeChannel()
                 if(!BTN_ANY) {
                     button_released = true;
                 }
+                alarmBeep();
             }
             if(state == STATE_MAIN) {
                 refreshTitle();
@@ -382,6 +383,25 @@ void shortbeep()
     BUZZ_OFF;
 }
 
+// alarm beep management, must be called regularly
+void alarmBeep()
+{
+    if(vbat < config.vbat_alarm) {
+        // every 10 seconds
+        uint32_t now = millis() % 10000;
+        // for 2 seconds
+        if(now < 2000) {
+            // beep 250ms every 500ms
+            if(now%500 < 250) {
+                BUZZ_ON;
+            } else {
+                BUZZ_OFF;
+            }
+        }
+    } else
+        BUZZ_OFF;
+}
+
 // wait buttons release
 void waitButtonsRelease()
 {
@@ -390,6 +410,6 @@ void waitButtonsRelease()
         timeout = millis()+20;
         while(millis() < timeout)
             switchBestRSSI();
-        // todo: call non blocking buzzer manager
+        alarmBeep();
     }
 }
