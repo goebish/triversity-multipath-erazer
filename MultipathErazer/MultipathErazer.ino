@@ -173,6 +173,7 @@ void processSettingsMenu()
 void processScanner()
 {
     static uint16_t max_found = 0;
+    static uint16_t last_max_found = 0;
     if(BTN_ANY) {
         shortbeep();
         state = STATE_MAIN;
@@ -190,11 +191,16 @@ void processScanner()
     if(max_rssi > max_found) {
         max_found = max_rssi;
         max_rssi_scan_index = scan_channel;
+        if(max_found > last_max_found) {
+            updateScannerDialog(_BV(SCANNER_BEST));
+            last_max_found = max_found;
+        }
     }
     scan_channel ++;
     if(scan_channel > 39) {
         updateScannerDialog(_BV(SCANNER_BEST));
         scan_channel = 0;
+        last_max_found = max_found;
         max_found = 0;
     }
 }

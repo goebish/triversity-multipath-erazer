@@ -259,11 +259,15 @@ void updateScannerDialog(uint8_t portion) {
     if(portion & _BV(SCANNER_BEST)) {
         tft.setTextSize(1);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
-        tft.setCursor(11, 23);
+        tft.setCursor(17, 29);
         tft.print("Best: ");
+        tft.setTextSize(2);
+        tft.setCursor(56, 22);
         uint8_t index = pgm_read_byte_near(channelList + max_rssi_scan_index);
         tft.print((char *)pgm_read_word(&(short_band_name[index/8])));
         tft.print((index%8)+1);
+        tft.print(" ");
+        tft.print(pgm_read_word_near(channelFreqTable + index));
     }
 }
 
