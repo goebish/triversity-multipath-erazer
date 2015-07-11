@@ -208,6 +208,7 @@ void updateScannerDialog(uint8_t portion) {
     #define BAR_WIDTH 2
     #define GRAPH_X 20
     #define GRAPH_WIDTH ((BAR_WIDTH+1)*40)
+    
     if(portion & _BV(SCANNER_INIT)) {
         refreshTitle();
         clearFrame();
@@ -230,12 +231,14 @@ void updateScannerDialog(uint8_t portion) {
         tft.setCursor(GRAPH_X-12, BAR_TOP+BAR_HEIGHT+10);
         tft.print(F("5645      5800      5945"));
     }
+    
     if(portion & _BV(SCANNER_MARKER)) {
         // remove previous marker
         tft.fillRect(GRAPH_X + (scan_channel !=0 ? scan_channel-1 : 39)*(BAR_WIDTH+1), BAR_TOP+BAR_HEIGHT+1, 2, BAR_WIDTH,ST7735_BLACK);
         // draw new marker
         tft.fillRect(GRAPH_X + (scan_channel)*(BAR_WIDTH+1), BAR_TOP+BAR_HEIGHT+1,BAR_WIDTH, 2, ST7735_WHITE);
     }
+    
     if(portion & _BV(SCANNER_GRAPH)) {
         uint8_t height = constrain(map(max_rssi, 0, 1023, 0, BAR_HEIGHT)-2,0,BAR_HEIGHT);
         if(height != previous_height[scan_channel]) {
@@ -251,6 +254,16 @@ void updateScannerDialog(uint8_t portion) {
             }
             previous_height[scan_channel] = height;
         }
+    }
+    
+    if(portion & _BV(SCANNER_BEST)) {
+        tft.setTextSize(1);
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        tft.setCursor(11, 23);
+        tft.print("Best: ");
+        uint8_t index = pgm_read_byte_near(channelList + max_rssi_scan_index);
+        tft.print((char *)pgm_read_word(&(short_band_name[index/8])));
+        tft.print((index%8)+1);
     }
 }
 

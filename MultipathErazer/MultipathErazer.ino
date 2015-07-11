@@ -36,6 +36,7 @@ uint8_t SelectedSource = 0;
 uint8_t vbat;
 uint8_t MaxSource = 0;
 int16_t max_rssi = 0;
+int8_t max_rssi_scan_index;
 bool show_active_leds = true;
 uint8_t current_main_menu_item;
 uint8_t scan_channel;
@@ -130,7 +131,7 @@ void initState()
 {
     switch(state) {
         case STATE_MAIN:
-            updateMainDialog(_BV(MAIN_INIT) | _BV(MAIN_BAND) | _BV(MAIN_CHANNEL) | _BV(MAIN_MODE) );
+            updateMainDialog(_BV(MAIN_INIT) | _BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
             SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
             show_active_leds=true;
             break;
@@ -171,6 +172,7 @@ void processSettingsMenu()
 
 void processScanner()
 {
+    static uint16_t max_found = 0;
     if(BTN_ANY) {
         shortbeep();
         state = STATE_MAIN;
@@ -183,10 +185,17 @@ void processScanner()
     SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + channelIndex));
     updateScannerDialog(_BV(SCANNER_MARKER));
     wait(RSSI_STABILIZATION_TIME);
+    switchBestRSSI();
     updateScannerDialog(_BV(SCANNER_GRAPH));
+    if(max_rssi > max_found) {
+        max_found = max_rssi;
+        max_rssi_scan_index = scan_channel;
+    }
     scan_channel ++;
     if(scan_channel > 39) {
+        updateScannerDialog(_BV(SCANNER_BEST));
         scan_channel = 0;
+        max_found = 0;
     }
 }
 

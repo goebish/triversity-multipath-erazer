@@ -12,7 +12,6 @@ enum e_MAIN_DIALOG{ // portions for updateMainDialog
     MAIN_BAND,
     MAIN_CHANNEL,
     MAIN_BATTERY,
-    MAIN_MODE,
 };
 
 enum e_CALIB_DIALOG{
@@ -36,6 +35,7 @@ enum e_SCANNER_DIALOG{
     SCANNER_INIT,
     SCANNER_GRAPH,
     SCANNER_MARKER,
+    SCANNER_BEST,
 };
 
 /////////////////////
