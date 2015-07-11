@@ -12,6 +12,11 @@ void TFT_init_display()
     tft.fillScreen(ST7735_BLACK);
 }
 
+uint16_t convertColor(uint8_t r, uint8_t g, uint8_t b)
+{
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+}
+
 void drawFrame()
 {
     tft.drawRect(0,0,160,128,ST7735_WHITE);
@@ -187,7 +192,7 @@ void updateSettingsMenuDialog(uint8_t portion) {
     if(portion & _BV(SETTINGS_MENU_INIT)) {
         refreshTitle();
         clearFrame();
-        
+
         locate(1,4,2);
         tft.setTextSize(2);
         tft.setTextColor(ST7735_WHITE);
@@ -196,14 +201,56 @@ void updateSettingsMenuDialog(uint8_t portion) {
 }
 
 void updateScannerDialog(uint8_t portion) {
+    static uint8_t previous_height[40];
+    uint8_t i;
+    #define BAR_TOP 45
+    #define BAR_HEIGHT 60
+    #define BAR_WIDTH 2
+    #define GRAPH_X 20
+    #define GRAPH_WIDTH ((BAR_WIDTH+1)*40)
     if(portion & _BV(SCANNER_INIT)) {
         refreshTitle();
         clearFrame();
-        
-        locate(1,4,2);
-        tft.setTextSize(2);
+        // Y axis
+        for(i=0; i<40; i++) {
+            previous_height[i] = 0;
+        }
+        tft.drawFastVLine(GRAPH_X-3, BAR_TOP-1, BAR_HEIGHT, ST7735_WHITE);
+        for(i=0; i<6; i++) {
+            tft.drawFastHLine(GRAPH_X-4, (BAR_TOP-1) + (BAR_HEIGHT/5)*i,3,ST7735_WHITE);
+            tft.drawFastHLine(GRAPH_X-2, (BAR_TOP-1) + (BAR_HEIGHT/5)*i,GRAPH_WIDTH+2,convertColor(80,80,80));
+        }
+        // X axis
+        tft.drawFastHLine(GRAPH_X, BAR_TOP+BAR_HEIGHT+5, GRAPH_WIDTH, ST7735_WHITE);
+        for(i=0; i<11; i++) {
+            tft.drawFastVLine(GRAPH_X + (GRAPH_WIDTH/10)*i, BAR_TOP+BAR_HEIGHT+4, 3, ST7735_WHITE);
+        }
+        tft.setTextSize(1);
         tft.setTextColor(ST7735_WHITE);
-        tft.print(F("Coming soon"));
+        tft.setCursor(GRAPH_X-12, BAR_TOP+BAR_HEIGHT+10);
+        tft.print(F("5645      5800      5945"));
+    }
+    if(portion & _BV(SCANNER_MARKER)) {
+        // remove previous marker
+        tft.fillRect(GRAPH_X + (scan_channel !=0 ? scan_channel-1 : 39)*(BAR_WIDTH+1), BAR_TOP+BAR_HEIGHT+1, 2, BAR_WIDTH,ST7735_BLACK);
+        // draw new marker
+        tft.fillRect(GRAPH_X + (scan_channel)*(BAR_WIDTH+1), BAR_TOP+BAR_HEIGHT+1,BAR_WIDTH, 2, ST7735_WHITE);
+    }
+    if(portion & _BV(SCANNER_GRAPH)) {
+        uint8_t height = constrain(map(max_rssi, 0, 1023, 0, BAR_HEIGHT)-2,0,BAR_HEIGHT);
+        if(height != previous_height[scan_channel]) {
+            if(height > previous_height[scan_channel]) {
+                tft.fillRect(GRAPH_X + scan_channel*(BAR_WIDTH+1), BAR_TOP + BAR_HEIGHT-height, BAR_WIDTH, height - previous_height[scan_channel], ST7735_WHITE);
+            } else {
+                tft.fillRect(GRAPH_X + scan_channel*(BAR_WIDTH+1), BAR_TOP + BAR_HEIGHT-previous_height[scan_channel], BAR_WIDTH, previous_height[scan_channel] - height, ST7735_BLACK);
+                for(i=0; i<5; i++) {
+                    if(BAR_TOP + (BAR_HEIGHT - height) > (BAR_TOP-1) + (BAR_HEIGHT/5)*i) {
+                        tft.drawFastHLine(GRAPH_X + scan_channel*(BAR_WIDTH+1), (BAR_TOP-1) + (BAR_HEIGHT/5)*i,BAR_WIDTH,convertColor(80,80,80));    
+                    }                
+                }                    
+            }
+            previous_height[scan_channel] = height;
+        }
     }
 }
 

@@ -34,6 +34,8 @@ enum e_SETTINGS_MENU_DIALOG{
 
 enum e_SCANNER_DIALOG{
     SCANNER_INIT,
+    SCANNER_GRAPH,
+    SCANNER_MARKER,
 };
 
 /////////////////////

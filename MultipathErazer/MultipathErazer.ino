@@ -9,6 +9,7 @@ PDQ_ST7735 tft;
 
 #define NUMBER_OF_RECEIVER 3
 #define VBAT_FACTOR 190
+#define RSSI_STABILIZATION_TIME 50
 
 const unsigned char RSSI_Pin[3] = { A2, A1, A0}; //Analog Pin
 
@@ -37,6 +38,9 @@ uint8_t MaxSource = 0;
 int16_t max_rssi = 0;
 bool show_active_leds = true;
 uint8_t current_main_menu_item;
+uint8_t scan_channel;
+uint8_t channelIndex;
+uint16_t anim_count;
 
 // timers
 uint32_t saveSettings = 0;
@@ -127,19 +131,29 @@ void initState()
     switch(state) {
         case STATE_MAIN:
             updateMainDialog(_BV(MAIN_INIT) | _BV(MAIN_BAND) | _BV(MAIN_CHANNEL) | _BV(MAIN_MODE) );
+            SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
+            show_active_leds=true;
             break;
         case STATE_CALIB:
             updateCalibDialog(_BV(CALIB_INIT) | _BV(CALIB_HEADER));
+            show_active_leds=true;
             break;
         case STATE_MAIN_MENU:
             current_main_menu_item = MAIN_MENU_EXIT;
             updateMainMenu(_BV(MAIN_MENU_INIT) | _BV(MAIN_MENU_ITEMS));
+            show_active_leds=true;
             break;
         case STATE_SCANNER:
             updateScannerDialog(_BV(SCANNER_INIT));
+            show_active_leds=false;
+            scan_channel = 0;
+            channelIndex = pgm_read_byte_near(channelList + scan_channel);
+            SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + channelIndex));
+            delay(100);
             break;
         case STATE_SETTINGS_MENU:
             updateSettingsMenuDialog(_BV(SETTINGS_MENU_INIT));
+            show_active_leds=true;
             break;
     }
 }
@@ -163,6 +177,16 @@ void processScanner()
         initState();
         waitButtonsRelease();
         return;
+    }
+    channelIndex = pgm_read_byte_near(channelList + scan_channel);
+    PORTC = (PORTC & ~0b111000) | (0b1000 << ((anim_count++/2) % NUMBER_OF_RECEIVER));
+    SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + channelIndex));
+    updateScannerDialog(_BV(SCANNER_MARKER));
+    wait(RSSI_STABILIZATION_TIME);
+    updateScannerDialog(_BV(SCANNER_GRAPH));
+    scan_channel ++;
+    if(scan_channel > 39) {
+        scan_channel = 0;
     }
 }
 
@@ -271,7 +295,6 @@ void changeChannel()
             }
             bool button_released=false;
             show_active_leds=false;
-            uint16_t loop_count=0;
             while(!BTN_ANY || !button_released) {
                 config.current_channel += direction;
                 if(config.current_channel > 39) {
@@ -282,8 +305,8 @@ void changeChannel()
                 }
                 SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + config.current_channel));
                 // LEDs animation
-                loop_count += direction;
-                PORTC = (PORTC & ~0b111000) | (0b1000 << ((loop_count/2) % NUMBER_OF_RECEIVER));
+                anim_count += direction;
+                PORTC = (PORTC & ~0b111000) | (0b1000 << ((anim_count/2) % NUMBER_OF_RECEIVER));
                 switch(state) {
                     case STATE_MAIN:
                         updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
@@ -295,9 +318,9 @@ void changeChannel()
                 // let rx stabilize on new frequency
                 if(config.current_channel % 8 == 0) {
                     shortbeep(); // beep on band change
-                    delay(32);
+                    wait(RSSI_STABILIZATION_TIME-8);
                     } else {
-                    delay(40);
+                    wait(RSSI_STABILIZATION_TIME);
                 }
                 switchBestRSSI();
                 if(max_rssi >= config.auto_threshold) {
@@ -411,5 +434,14 @@ void waitButtonsRelease()
         while(millis() < timeout)
             switchBestRSSI();
         alarmBeep();
+    }
+}
+
+// wait or exit if button press
+void wait(uint8_t msec)
+{
+    uint32_t timeout = millis() + msec;
+    while(!BTN_ANY && millis() < timeout) {
+        ;
     }
 }
