@@ -13,7 +13,7 @@ void TFT_init_display()
     tft.fillScreen(ST7735_BLACK);
 }
 
-uint16_t convertColor(uint8_t r, uint8_t g, uint8_t b)
+inline uint16_t convertColor(uint8_t r, uint8_t g, uint8_t b)
 {
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
@@ -294,11 +294,10 @@ void showBitmap() {
                 // single pixels run
                 len = command;
                 while(len--) {
-                    uint8_t color = pgm_read_byte_near( splash_logo + pos);
-                    pos++;
+                    uint8_t color = pgm_read_byte_near( splash_logo + (pos++));
                     tft.drawPixel(x++, y, convertColor(color,color,color));
                 }
-                if(command % 2 != 0) { // sequence not aligned on word boundary
+                if(command & 0x01) { // sequence not aligned on word boundary
                     pos++; // skip 0 padding
                 }
             }
