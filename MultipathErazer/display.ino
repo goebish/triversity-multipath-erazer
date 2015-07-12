@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include "pinout.h"
 #include "display.h"
+#include "logo.h"
 
 #include <PDQ_GFX.h>			// PDQ: Core graphics library
 #include <PDQ_ST7735.h>			// PDQ: Hardware-specific driver library
@@ -208,7 +209,7 @@ void updateScannerDialog(uint8_t portion) {
     #define BAR_WIDTH 2
     #define GRAPH_X 20
     #define GRAPH_WIDTH ((BAR_WIDTH+1)*40)
-    
+
     if(portion & _BV(SCANNER_INIT)) {
         refreshTitle();
         clearFrame();
@@ -231,14 +232,14 @@ void updateScannerDialog(uint8_t portion) {
         tft.setCursor(GRAPH_X-12, BAR_TOP+BAR_HEIGHT+10);
         tft.print(F("5645      5800      5945"));
     }
-    
+
     if(portion & _BV(SCANNER_MARKER)) {
         // remove previous marker
         tft.fillRect(GRAPH_X + (scan_channel !=0 ? scan_channel-1 : 39)*(BAR_WIDTH+1), BAR_TOP+BAR_HEIGHT+1, 2, BAR_WIDTH,ST7735_BLACK);
         // draw new marker
         tft.fillRect(GRAPH_X + (scan_channel)*(BAR_WIDTH+1), BAR_TOP+BAR_HEIGHT+1,BAR_WIDTH, 2, ST7735_WHITE);
     }
-    
+
     if(portion & _BV(SCANNER_GRAPH)) {
         uint8_t height = constrain(map(max_rssi, 0, 1023, 0, BAR_HEIGHT)-2,0,BAR_HEIGHT);
         if(height != previous_height[scan_channel]) {
@@ -248,14 +249,14 @@ void updateScannerDialog(uint8_t portion) {
                 tft.fillRect(GRAPH_X + scan_channel*(BAR_WIDTH+1), BAR_TOP + BAR_HEIGHT-previous_height[scan_channel], BAR_WIDTH, previous_height[scan_channel] - height, ST7735_BLACK);
                 for(i=0; i<5; i++) {
                     if(BAR_TOP + (BAR_HEIGHT - height) > (BAR_TOP-1) + (BAR_HEIGHT/5)*i) {
-                        tft.drawFastHLine(GRAPH_X + scan_channel*(BAR_WIDTH+1), (BAR_TOP-1) + (BAR_HEIGHT/5)*i,BAR_WIDTH,convertColor(80,80,80));    
-                    }                
-                }                    
+                        tft.drawFastHLine(GRAPH_X + scan_channel*(BAR_WIDTH+1), (BAR_TOP-1) + (BAR_HEIGHT/5)*i,BAR_WIDTH,convertColor(80,80,80));
+                    }
+                }
             }
             previous_height[scan_channel] = height;
         }
     }
-    
+
     if(portion & _BV(SCANNER_BEST)) {
         tft.setTextSize(1);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
@@ -271,32 +272,43 @@ void updateScannerDialog(uint8_t portion) {
     }
 }
 
+// display 8 bit grayscale RLE compressed bitmap
+void showBitmap() {
+    uint8_t x=0, y=SCREEN_HEIGHT-1;
+    uint16_t pos=0;
+    for(;;) {
+        uint8_t len = pgm_read_byte_near( splash_logo + (pos++));
+        uint8_t command = pgm_read_byte_near( splash_logo + (pos++));
+        if(len != 0) { // draw x consecutive pixels of the same color
+            tft.drawFastHLine(x,y,len,convertColor(command,command,command));
+            x += len;
+        } else {
+            // escape command
+            if( command == 0x00) { // end of line
+                y--;
+                x=0;
+            } else
+            if(command == 0x01) { // end of bitmap
+                return;
+            } else {
+                // single pixels run
+                len = command;
+                while(len--) {
+                    uint8_t color = pgm_read_byte_near( splash_logo + pos);
+                    pos++;
+                    tft.drawPixel(x++, y, convertColor(color,color,color));
+                }
+                if(command % 2 != 0) { // sequence not aligned on word boundary
+                    pos++; // skip 0 padding
+                }
+            }
+        }
+    }
+}
+
 void displaySplash()
 {
-    tft.fillScreen(ST7735_BLACK);
-    tft.setCursor(40, 25);
-    tft.print(F("Goebish"));
-    tft.setCursor(60, 40);
-    tft.print("&");
-    #define LOGO_OFFSET 15
-    tft.drawCircle(66, 64+LOGO_OFFSET, 22, ST7735_WHITE);
-    tft.drawCircle(66, 64+LOGO_OFFSET, 17, ST7735_WHITE);
-    tft.fillRect(0, 58+LOGO_OFFSET , 128, 11, ST7735_BLACK);
-    tft.drawFastHLine(15, 57+LOGO_OFFSET, 131, ST7735_WHITE);
-    tft.drawFastHLine(15, 69+LOGO_OFFSET, 131, ST7735_WHITE);
-    tft.setCursor(15,60+LOGO_OFFSET);
-    tft.setTextSize(1);
-    tft.print(F("LA FABRIQUE CIRCULAIRE"));
-    delay(3000);
-    tft.fillScreen(ST7735_BLACK);
-    tft.setTextSize(2);
-    tft.setTextColor(ST7735_WHITE);
-    tft.setCursor((160-12*10)/2, 15);
-    tft.print(F("TRIVERSITY"));
-    tft.setCursor((160-12*9)/2, 80);
-    tft.print(F("Multipath"));
-    tft.setCursor((160-12*6)/2, 105);
-    tft.print(F("Erazer"));
+    showBitmap();
     for(uint8_t i=0; i<30; i++) {
         PORTC = (PORTC & ~0b111000) | (0b1000 << (i % 3));
         if(i>26) {
@@ -304,4 +316,5 @@ void displaySplash()
         }
         delay(80);
     }
+    tft.fillScreen(ST7735_BLACK);
 }
