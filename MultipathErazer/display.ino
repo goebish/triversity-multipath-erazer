@@ -111,11 +111,14 @@ void updateMainDialog(uint8_t portion)
 
 void updateCalibDialog(uint8_t portion)
 {
+    #define BARGRAPH_TOP 40
+    #define BARGRAPH_HEIGHT 60
     static uint8_t previous_height[NUMBER_OF_RECEIVER];
     static uint16_t RSSI_Previous[NUMBER_OF_RECEIVER];
     uint8_t i;
     tft.setTextColor(ST7735_WHITE);
     tft.setTextSize(1);
+    
     if(portion & _BV(CALIB_INIT)) {
         clearFrame();
         for(i=0; i<NUMBER_OF_RECEIVER; i++) {
@@ -125,8 +128,13 @@ void updateCalibDialog(uint8_t portion)
            tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
            tft.print("vRX");
            tft.print(i+1);
+           tft.drawFastVLine( 16 + i*50, BARGRAPH_TOP, BARGRAPH_HEIGHT, ST7735_WHITE);
+           for(uint8_t tick=0; tick<6; tick++) {
+               tft.drawFastHLine(15+i*50, (BARGRAPH_TOP-1) + (BARGRAPH_HEIGHT/5)*tick,3,ST7735_WHITE);
+           }
         }
     }
+    
     if(portion & _BV(CALIB_HEADER)) {
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(1);
@@ -137,8 +145,7 @@ void updateCalibDialog(uint8_t portion)
         tft.print("  ");
         tft.print(pgm_read_word_near(channelFreqTable + config.current_channel));
     }
-    #define BARGRAPH_TOP 40
-    #define BARGRAPH_HEIGHT 60
+    
     if(portion & _BV(CALIB_BARS)) {
         for(i=0; i<NUMBER_OF_RECEIVER; i++) {
             uint8_t height = map(RSSI_Value[i], 0, 1023, 0, BARGRAPH_HEIGHT);
@@ -152,6 +159,7 @@ void updateCalibDialog(uint8_t portion)
             }
         }
     }
+    
     if(portion & _BV(CALIB_VALUES)) {
          for(i=0; i<NUMBER_OF_RECEIVER; i++) {
              if( RSSI_Value[i] != RSSI_Previous[i]) {
