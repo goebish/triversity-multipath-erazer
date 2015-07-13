@@ -6,6 +6,8 @@
 #include <PDQ_GFX.h>			// PDQ: Core graphics library
 #include <PDQ_ST7735.h>			// PDQ: Hardware-specific driver library
 
+char stringBuffer[30];
+
 void TFT_init_display()
 {
     tft.begin();						// initialize LCD
@@ -35,19 +37,27 @@ void refreshTitle()
     tft.setTextColor(ST7735_WHITE);
     tft.setTextSize(1);
     tft.setCursor(5,4);
-    tft.println((char *)pgm_read_word(&(dialog_title[state])));
+    printText(&dialog_title[state]);
 }
 
 void locate(uint8_t x,uint8_t y, uint8_t text_size) {
     tft.setCursor( x*6*text_size, y*8*text_size);
 }
 
-void centerText(uint_farptr_t str, uint8_t y, uint8_t textSize)
+// print PROGMEM string
+void printText(const void* P_str) {
+    strcpy_P(stringBuffer, (char*)pgm_read_word(P_str));
+    tft.print((char*)stringBuffer);
+}
+
+// center PROGMEM string
+void centerText(const void* P_str, uint8_t y, uint8_t textSize)
 {
-    int8_t x = (SCREEN_WIDTH/2)-((strlen((PGM_P)str)*6*textSize)/2);
+    strcpy_P(stringBuffer, (char*)pgm_read_word(P_str));
+    int8_t x = (SCREEN_WIDTH/2)-((strlen(stringBuffer)*6*textSize)/2);
     tft.setTextSize(textSize);
     tft.setCursor(x,y);
-    tft.print((char*)str);
+    tft.print((char*)stringBuffer);
 }
 
 void updateMainDialog(uint8_t portion)
@@ -72,7 +82,7 @@ void updateMainDialog(uint8_t portion)
         tft.setCursor(10+10+12*5, 30);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
-        tft.println((char *)pgm_read_word(&(long_band_name[config.current_channel/8])));
+        printText(&long_band_name[config.current_channel/8]);
     }
 
     if(portion & _BV(MAIN_CHANNEL)) { // channel # + freq
@@ -151,8 +161,8 @@ void updateCalibDialog(uint8_t portion)
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(1);
         tft.setCursor(5,4);
-        tft.print("RSSI    ");
-        tft.print((char *)pgm_read_word(&(short_band_name[config.current_channel/8])));
+        tft.print(F("RSSI    "));
+        tft.print((char)short_band_name[config.current_channel/8]);
         tft.print((config.current_channel%8)+1);
         tft.print("  ");
         tft.print(pgm_read_word_near(channelFreqTable + config.current_channel));
@@ -203,17 +213,17 @@ void updateMainMenu(uint8_t portion)
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
         for (i=0; i<MAIN_MENU_ITEMS; i++) {
-            centerText(pgm_read_word(&(main_menu_item[i])), 24+i*26, 2);
+            centerText(&main_menu_item[i], 24+i*26, 2);
         }
     }
     if(portion & _BV(MAIN_MENU_ITEMS)) {
         tft.setTextSize(2);
         tft.setTextColor(ST7735_WHITE);
         tft.fillRect(6, 22 + previous_selection*26, 147, 19, ST7735_BLACK);
-        centerText(pgm_read_word(&(main_menu_item[previous_selection])), 24+previous_selection*26, 2);
+        centerText(&main_menu_item[previous_selection], 24+previous_selection*26, 2);
         tft.setTextColor(ST7735_BLACK);
         tft.fillRect(6, 22 + current_main_menu_item*26, 147, 19, ST7735_WHITE);
-        centerText(pgm_read_word(&(main_menu_item[current_main_menu_item])), 24+current_main_menu_item*26, 2);
+        centerText(&main_menu_item[current_main_menu_item], 24+current_main_menu_item*26, 2);
         previous_selection = current_main_menu_item;
     }
 }
@@ -290,11 +300,11 @@ void updateScannerDialog(uint8_t portion) {
         tft.setTextSize(1);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setCursor(17, 29);
-        tft.print("Best: ");
+        tft.print(F("Best: "));
         tft.setTextSize(2);
         tft.setCursor(56, 22);
         uint8_t index = pgm_read_byte_near(channelList + max_rssi_scan_index);
-        tft.print((char *)pgm_read_word(&(short_band_name[index/8])));
+        tft.print((char)short_band_name[index/8]);
         tft.print((index%8)+1);
         tft.print(" ");
         tft.print(pgm_read_word_near(channelFreqTable + index));
@@ -305,9 +315,8 @@ void updateScannerDialog(uint8_t portion) {
         tft.drawRect(GRAPH_X-8, BAR_TOP+10, GRAPH_WIDTH+16, 50, ST7735_WHITE);
         tft.drawFastHLine(GRAPH_X-8, BAR_TOP+27, GRAPH_WIDTH+16, ST7735_WHITE);
         tft.setTextColor(ST7735_WHITE);
-        centerText(pgm_read_word(&(misc_string[STRING_SELECT_BEST])), BAR_TOP + 16, 1);
-        centerText(pgm_read_word(&(misc_string[STRING_NO_YES])), BAR_TOP + 36, 2);
-        
+        centerText(&misc_string[STRING_SELECT_BEST], BAR_TOP + 16, 1);
+        centerText(&misc_string[STRING_NO_YES], BAR_TOP + 36, 2);
     }
 }
 
@@ -323,7 +332,7 @@ void showBitmap() {
             x += len;
         } else {
             // escape command
-            if( command == 0x00) { // end of line
+            if(command == 0x00) { // end of line
                 y--;
                 x=0;
             } else
