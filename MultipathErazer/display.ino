@@ -163,9 +163,15 @@ void updateCalibDialog(uint8_t portion)
     if(portion & _BV(CALIB_VALUES)) {
          for(i=0; i<NUMBER_OF_RECEIVER; i++) {
              if( RSSI_Value[i] != RSSI_Previous[i]) {
-                 tft.fillRect(22 + i*50, 110, 24, 7, ST7735_BLACK);
+                 tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
                  tft.setCursor(22+ i*50, 110);
                  tft.print(RSSI_Value[i]);
+                 if(RSSI_Value[i] < 100) {
+                     tft.print(" ");
+                 }
+                 if(RSSI_Value[i] < 1000) {
+                     tft.print(" ");
+                 }
                  RSSI_Previous[i] = RSSI_Value[i];
              }
          }
