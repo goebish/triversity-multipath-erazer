@@ -42,6 +42,7 @@ uint8_t current_main_menu_item;
 uint8_t scan_channel;
 uint8_t channelIndex;
 uint16_t anim_count;
+bool searching=false;
 
 // timers
 uint32_t saveSettings = 0;
@@ -293,6 +294,7 @@ void changeChannel()
         }
         // long press = auto scan
         if(BTN_ANY && max_rssi < config.auto_threshold) {
+            searching = true;
             tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
             tft.setTextSize(1);
             switch(state) {
@@ -300,10 +302,13 @@ void changeChannel()
                     tft.setCursor(5,4);
                     break;
                 case STATE_CALIB:
+                    updateCalibDialog( _BV(CALIB_RESET_BARS) | _BV(CALIB_BARS));
+                    tft.fillRect(36, 39, 84 , 16, ST7735_BLACK);
+                    tft.drawRect(36, 39, 84 , 16, ST7735_WHITE);
                     tft.setCursor(40, 43);
                     break;
             }
-            tft.print(F("Searching ... "));
+            tft.print(F("Searching ..."));
             int8_t direction=1;
             if(BTN_LEFT) {
                 direction = -1;
@@ -327,7 +332,7 @@ void changeChannel()
                         updateMainDialog(_BV(MAIN_BAND) | _BV(MAIN_CHANNEL));
                         break;
                     case STATE_CALIB:
-                        updateCalibDialog(_BV(CALIB_BARS) | _BV(CALIB_VALUES) | _BV(CALIB_HEADER));
+                        updateCalibDialog(_BV(CALIB_HEADER));
                         break;
                 }
                 // let rx stabilize on new frequency
@@ -338,12 +343,21 @@ void changeChannel()
                     wait(RSSI_STABILIZATION_TIME);
                 }
                 switchBestRSSI();
+                if(state == STATE_CALIB) {
+                    updateCalibDialog(_BV(CALIB_BARS) | _BV(CALIB_VALUES));
+                }
+                // signal found ?
                 if(max_rssi >= config.auto_threshold) {
-                    shortbeep();
-                    delay(100);
-                    shortbeep();
-                    delay(100);
-                    break;
+                    // try to avoid false positive
+                    wait(RSSI_STABILIZATION_TIME*3);
+                    switchBestRSSI();
+                    if(max_rssi >= config.auto_threshold) {
+                        shortbeep();
+                        delay(100);
+                        shortbeep();
+                        delay(100);
+                        break;
+                    }                        
                 }
                 if(!BTN_ANY) {
                     button_released = true;
@@ -354,10 +368,12 @@ void changeChannel()
                 refreshTitle();
             }
             else if(state == STATE_CALIB) {
-                tft.fillRect(40, 43, 100, 8, ST7735_BLACK);
+                tft.fillRect(36, 39, 84 , 16, ST7735_BLACK);
+                updateCalibDialog(_BV(CALIB_SCALES));
             }
             shortbeep();
         }
+        searching = false;
         waitButtonsRelease();
         saveSettings = millis() + 3000; // save settings 3s after last change
         show_active_leds = true;

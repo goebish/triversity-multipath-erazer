@@ -128,11 +128,23 @@ void updateCalibDialog(uint8_t portion)
            tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
            tft.print("vRX");
            tft.print(i+1);
-           tft.drawFastVLine( 16 + i*50, BARGRAPH_TOP, BARGRAPH_HEIGHT, ST7735_WHITE);
-           for(uint8_t tick=0; tick<6; tick++) {
-               tft.drawFastHLine(15+i*50, (BARGRAPH_TOP-1) + (BARGRAPH_HEIGHT/5)*tick,3,ST7735_WHITE);
-           }
         }
+        portion |= _BV(CALIB_SCALES);
+    }
+    
+    if(portion & _BV(CALIB_SCALES)) {
+        for(i=0; i<NUMBER_OF_RECEIVER; i++) {
+            tft.drawFastVLine( 16 + i*50, BARGRAPH_TOP, BARGRAPH_HEIGHT, ST7735_WHITE);
+            for(uint8_t tick=0; tick<6; tick++) {
+                tft.drawFastHLine(15+i*50, (BARGRAPH_TOP-1) + (BARGRAPH_HEIGHT/5)*tick,3,ST7735_WHITE);
+            }
+        }            
+    }
+    
+    if(portion & _BV(CALIB_RESET_BARS)) {
+        for(i=0; i<NUMBER_OF_RECEIVER; i++) {
+            RSSI_Value[i] = 0;
+        }            
     }
     
     if(portion & _BV(CALIB_HEADER)) {
@@ -149,6 +161,9 @@ void updateCalibDialog(uint8_t portion)
     if(portion & _BV(CALIB_BARS)) {
         for(i=0; i<NUMBER_OF_RECEIVER; i++) {
             uint8_t height = map(RSSI_Value[i], 0, 1023, 0, BARGRAPH_HEIGHT);
+            if(searching == true) { // avoid breaking "searching ..." label
+                height = constrain(height,0, BARGRAPH_HEIGHT-20);
+            }
             if(height != previous_height[i]) {
                 if(height > previous_height[i]) {
                     tft.fillRect(20 + i*50, BARGRAPH_TOP + BARGRAPH_HEIGHT-height, 20, height - previous_height[i], ST7735_WHITE);
