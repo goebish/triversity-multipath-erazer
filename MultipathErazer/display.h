@@ -116,7 +116,7 @@ enum e_MAIN_MENU_ITEM{
 // misc strings
 
 const char misc_str1[] PROGMEM = "Select best channel ?";
-const char misc_str2[] PROGMEM = " < No  Yes > ";
+const char misc_str2[] PROGMEM = "\x11No   Yes\x10";
 
 PGM_P const misc_string[] PROGMEM = {
     misc_str1,
