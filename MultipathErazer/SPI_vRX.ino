@@ -28,6 +28,10 @@ uint16_t calcSRB(uint16_t freq)
 // https://github.com/simonchambers/fs-5.8g-vrx
 void SPI_vRX_set_frequency(uint16_t freq)
 {
+    static uint16_t last_freq = 0;
+    if(freq == last_freq)
+        return;
+    last_freq = freq;
     uint16_t channelData = calcSRB(freq);
     uint8_t i;
     // bit bash out 25 bits of data
