@@ -10,7 +10,7 @@ void TFT_init_display()
 {
     tft.begin();						// initialize LCD
     tft.setRotation(1);
-    tft.fillScreen(ST7735_BLACK);
+    tft.fillScreen(ST7735_WHITE);
 }
 
 inline uint16_t convertColor(uint8_t r, uint8_t g, uint8_t b)
