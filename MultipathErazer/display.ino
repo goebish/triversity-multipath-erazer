@@ -241,7 +241,7 @@ void updateScannerDialog(uint8_t portion) {
     }
 
     if(portion & _BV(SCANNER_GRAPH)) {
-        uint8_t height = constrain(map(max_rssi, 0, 1023, 0, BAR_HEIGHT)-2,0,BAR_HEIGHT);
+        uint8_t height = constrain(map(max_rssi, 0, 1000, 0, BAR_HEIGHT)-2,0,BAR_HEIGHT);
         if(height != previous_height[scan_channel]) {
             if(height > previous_height[scan_channel]) {
                 tft.fillRect(GRAPH_X + scan_channel*(BAR_WIDTH+1), BAR_TOP + BAR_HEIGHT-height, BAR_WIDTH, height - previous_height[scan_channel], ST7735_WHITE);
