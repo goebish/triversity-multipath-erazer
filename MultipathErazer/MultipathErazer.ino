@@ -39,6 +39,9 @@ int16_t max_rssi = 0;
 int8_t max_rssi_scan_index;
 bool show_active_leds = true;
 uint8_t current_main_menu_item;
+boolean scan_first_pass = true;
+uint16_t scan_max_found = 0;
+uint16_t scan_last_max_found = 0;
 uint8_t scan_channel;
 uint8_t channelIndex;
 uint16_t anim_count;
@@ -146,6 +149,9 @@ void initState()
             show_active_leds=true;
             break;
         case STATE_SCANNER:
+            scan_first_pass = true;
+            scan_max_found = 0;
+            scan_last_max_found = 0;
             updateScannerDialog(_BV(SCANNER_INIT));
             show_active_leds=false;
             scan_channel = 0;
@@ -173,8 +179,6 @@ void processSettingsMenu()
 
 void processScanner()
 {
-    static uint16_t max_found = 0;
-    static uint16_t last_max_found = 0;
     if(BTN_ANY) {
         shortbeep();
         state = STATE_MAIN;
@@ -189,20 +193,21 @@ void processScanner()
     wait(RSSI_STABILIZATION_TIME);
     switchBestRSSI();
     updateScannerDialog(_BV(SCANNER_GRAPH));
-    if(max_rssi > max_found) {
-        max_found = max_rssi;
+    if(max_rssi > scan_max_found) {
+        scan_max_found = max_rssi;
         max_rssi_scan_index = scan_channel;
-        if(max_found > last_max_found) {
+        if(scan_max_found > scan_last_max_found && !scan_first_pass) {
             updateScannerDialog(_BV(SCANNER_BEST));
-            last_max_found = max_found;
+            scan_last_max_found = scan_max_found;
         }
     }
     scan_channel ++;
     if(scan_channel > 39) {
+        scan_first_pass = false;
         updateScannerDialog(_BV(SCANNER_BEST));
         scan_channel = 0;
-        last_max_found = max_found;
-        max_found = 0;
+        scan_last_max_found = scan_max_found;
+        scan_max_found = 0;
     }
 }
 
