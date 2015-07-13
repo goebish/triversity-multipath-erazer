@@ -299,6 +299,16 @@ void updateScannerDialog(uint8_t portion) {
         tft.print(" ");
         tft.print(pgm_read_word_near(channelFreqTable + index));
     }
+    
+    if(portion & _BV(SCANNER_CHOICE)) {
+        tft.fillRect(1, BAR_TOP-1, 158, BAR_HEIGHT+21, ST7735_BLACK);
+        tft.drawRect(GRAPH_X-8, BAR_TOP+10, GRAPH_WIDTH+16, 50, ST7735_WHITE);
+        tft.drawFastHLine(GRAPH_X-8, BAR_TOP+27, GRAPH_WIDTH+16, ST7735_WHITE);
+        tft.setTextColor(ST7735_WHITE);
+        centerText(pgm_read_word(&(misc_string[STRING_SELECT_BEST])), BAR_TOP + 16, 1);
+        centerText(pgm_read_word(&(misc_string[STRING_NO_YES])), BAR_TOP + 36, 2);
+        
+    }
 }
 
 // display 8 bit grayscale RLE compressed bitmap

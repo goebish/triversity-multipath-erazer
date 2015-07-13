@@ -38,6 +38,7 @@ enum e_SCANNER_DIALOG{
     SCANNER_GRAPH,
     SCANNER_MARKER,
     SCANNER_BEST,
+    SCANNER_CHOICE,
 };
 
 /////////////////////
@@ -93,5 +94,18 @@ enum e_MAIN_MENU_ITEM{
 };
 
 #define MAIN_MENU_ITEMS (sizeof(main_menu_item)/sizeof(char *)) //array size
+
+///////////////////
+// misc strings
+
+PGM_P const misc_string[] PROGMEM = {
+    "Select best channel ?",
+    " < No  Yes > ",
+};
+
+enum e_MISC_STRING{
+    STRING_SELECT_BEST,
+    STRING_NO_YES,
+};
 
 #endif

@@ -44,6 +44,7 @@ uint16_t scan_max_found = 0;
 uint16_t scan_last_max_found = 0;
 uint8_t scan_channel;
 uint8_t channelIndex;
+uint8_t scan_best_index=0;
 uint16_t anim_count;
 bool searching=false;
 
@@ -152,6 +153,7 @@ void initState()
             scan_first_pass = true;
             scan_max_found = 0;
             scan_last_max_found = 0;
+            searching = true;
             updateScannerDialog(_BV(SCANNER_INIT));
             show_active_leds=false;
             scan_channel = 0;
@@ -180,35 +182,67 @@ void processSettingsMenu()
 void processScanner()
 {
     if(BTN_ANY) {
-        shortbeep();
-        state = STATE_MAIN;
-        initState();
-        waitButtonsRelease();
-        return;
-    }
-    channelIndex = pgm_read_byte_near(channelList + scan_channel);
-    PORTC = (PORTC & ~0b111000) | (0b1000 << ((anim_count++/2) % NUMBER_OF_RECEIVER));
-    SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + channelIndex));
-    updateScannerDialog(_BV(SCANNER_MARKER));
-    wait(RSSI_STABILIZATION_TIME);
-    switchBestRSSI();
-    updateScannerDialog(_BV(SCANNER_GRAPH));
-    if(max_rssi > scan_max_found) {
-        scan_max_found = max_rssi;
-        max_rssi_scan_index = scan_channel;
-        if(scan_max_found > scan_last_max_found && !scan_first_pass) {
-            updateScannerDialog(_BV(SCANNER_BEST));
-            scan_last_max_found = scan_max_found;
+        if(scan_first_pass) {
+            searching = false;
+            shortbeep();
+            state = STATE_MAIN;
+            initState();
+            waitButtonsRelease();
+            return;
+        }
+        if(searching) {
+            shortbeep();
+            show_active_leds = true;
+            searching = false;
+            updateScannerDialog(_BV(SCANNER_CHOICE));
+            SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + scan_best_index));
+            waitButtonsRelease();
+            return;
+        }
+        if(BTN_LEFT) { // No
+            shortbeep();
+            state = STATE_MAIN;
+            initState();
+            waitButtonsRelease();
+            return;
+        } else
+        if(BTN_RIGHT) { // Yes
+            shortbeep();
+            config.current_channel = scan_best_index;
+            saveSettings = millis()+500;
+            state = STATE_MAIN;
+            initState();
+            waitButtonsRelease();
+            return;
         }
     }
-    scan_channel ++;
-    if(scan_channel > 39) {
-        scan_first_pass = false;
-        updateScannerDialog(_BV(SCANNER_BEST));
-        scan_channel = 0;
-        scan_last_max_found = scan_max_found;
-        scan_max_found = 0;
-    }
+    if(searching) {
+        channelIndex = pgm_read_byte_near(channelList + scan_channel);
+        PORTC = (PORTC & ~0b111000) | (0b1000 << ((anim_count++/2) % NUMBER_OF_RECEIVER));
+        SPI_vRX_set_frequency(pgm_read_word_near(channelFreqTable + channelIndex));
+        updateScannerDialog(_BV(SCANNER_MARKER));
+        wait(RSSI_STABILIZATION_TIME);
+        switchBestRSSI();
+        updateScannerDialog(_BV(SCANNER_GRAPH));
+        if(max_rssi > scan_max_found) {
+            scan_max_found = max_rssi;
+            max_rssi_scan_index = scan_channel;
+            if(scan_max_found > scan_last_max_found && !scan_first_pass) {
+                updateScannerDialog(_BV(SCANNER_BEST));
+                scan_best_index = pgm_read_byte_near(channelList + max_rssi_scan_index);
+                scan_last_max_found = scan_max_found;
+            }
+        }
+        scan_channel ++;
+        if(scan_channel > 39) {
+            scan_first_pass = false;
+            updateScannerDialog(_BV(SCANNER_BEST));
+            scan_best_index = pgm_read_byte_near(channelList + max_rssi_scan_index);
+            scan_channel = 0;
+            scan_last_max_found = scan_max_found;
+            scan_max_found = 0;
+        }
+    }        
 }
 
 void processCalibState()
