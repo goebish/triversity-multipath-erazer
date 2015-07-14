@@ -375,7 +375,8 @@ void changeChannel()
                         break;
                 }
                 // let rx stabilize on new frequency
-                if(config.current_channel % 8 == 0) {
+                if((direction == 1 && config.current_channel % 8 == 0) ||
+                    direction ==-1 && config.current_channel % 8 == 7) {
                     shortbeep(); // beep on band change
                     wait(RSSI_STABILIZATION_TIME-8);
                     } else {
