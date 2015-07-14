@@ -102,20 +102,23 @@ void updateMainDialog(uint8_t portion)
     }
 
     if(portion & _BV(MAIN_BATTERY)) { // battery voltage
-        tft.fillRect(120, 4, 36, 7, ST7735_BLACK);
-        tft.setCursor(120, 4);
-        tft.setTextSize(1);
-        if(vbat >= 114) { // > 3.8V / cell
-            tft.setTextColor(ST7735_GREEN);
-        }
-        else if(vbat >= 111) { // > 3.7V / cell
-            tft.setTextColor(ST7735_YELLOW);
-        }
-        else { // < 3.7V / cell
-            tft.setTextColor(ST7735_RED);
-        }
-        tft.print((float)vbat/10, 1);
-        tft.print(F(" V"));
+        static uint8_t last_vbat=0;
+        if(vbat != last_vbat) {
+            tft.setCursor(120, 4);
+            tft.setTextSize(1);
+            if(vbat >= 114) { // > 3.8V / cell
+                tft.setTextColor(ST7735_GREEN, ST7735_BLACK);
+            }
+            else if(vbat >= 111) { // > 3.7V / cell
+                tft.setTextColor(ST7735_YELLOW, ST7735_BLACK);
+            }
+            else { // < 3.7V / cell
+                tft.setTextColor(ST7735_RED, ST7735_BLACK);
+            }
+            tft.print((float)vbat/10, 1);
+            tft.print(F(" V"));
+            last_vbat = vbat;
+        }            
     }
 }
 
