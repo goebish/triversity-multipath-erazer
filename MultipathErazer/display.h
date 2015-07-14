@@ -117,15 +117,30 @@ enum e_MAIN_MENU_ITEM{
 
 const char misc_str1[] PROGMEM = "Select best channel ?";
 const char misc_str2[] PROGMEM = "\x11No   Yes\x10";
+const char misc_str3[] PROGMEM = "Searching ...";
+const char misc_str4[] PROGMEM = "Band:";
+const char misc_str5[] PROGMEM = " MHz";
+const char misc_str6[] PROGMEM = "RSSI";
+const char misc_str7[] PROGMEM = "Best:";
 
 PGM_P const misc_string[] PROGMEM = {
     misc_str1,
     misc_str2,
+    misc_str3,
+    misc_str4,
+    misc_str5,
+    misc_str6,
+    misc_str7,
 };
 
 enum e_MISC_STRING{
     STRING_SELECT_BEST,
     STRING_NO_YES,
+    STRING_SEARCHING,
+    STRING_BAND,
+    STRING_MHZ,
+    STRING_RSSI,
+    STRING_BEST,
 };
 
 #endif

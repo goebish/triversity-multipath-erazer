@@ -70,7 +70,7 @@ void updateMainDialog(uint8_t portion)
         clearFrame();
         tft.setTextSize(2);
         tft.setCursor(10,30);
-        tft.print(F("Band: "));
+        printText(&misc_string[STRING_BAND]);
         tft.setCursor(10, 45);
         for(i=0; i<8; i++) {
             tft.setCursor(12 + i*18 , 60);
@@ -98,7 +98,7 @@ void updateMainDialog(uint8_t portion)
         tft.setTextSize(2);
         tft.setCursor(35, 95);
         tft.print(pgm_read_word_near(channelFreqTable + config.current_channel));
-        tft.print(F(" MHz"));
+        printText(&misc_string[STRING_MHZ]);
     }
 
     if(portion & _BV(MAIN_BATTERY)) { // battery voltage
@@ -116,7 +116,7 @@ void updateMainDialog(uint8_t portion)
                 tft.setTextColor(ST7735_RED, ST7735_BLACK);
             }
             tft.print((float)vbat/10, 1);
-            tft.print(F(" V"));
+            tft.print(" V");
             last_vbat = vbat;
         }            
     }
@@ -164,7 +164,8 @@ void updateCalibDialog(uint8_t portion)
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(1);
         tft.setCursor(5,4);
-        tft.print(F("RSSI    "));
+        printText(&misc_string[STRING_RSSI]);
+        tft.print("    ");
         tft.print((char)short_band_name[config.current_channel/8]);
         tft.print((config.current_channel%8)+1);
         tft.print("  ");
@@ -303,7 +304,7 @@ void updateScannerDialog(uint8_t portion) {
         tft.setTextSize(1);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setCursor(17, 29);
-        tft.print(F("Best: "));
+        printText(&misc_string[STRING_BEST]);
         tft.setTextSize(2);
         tft.setCursor(56, 22);
         uint8_t index = pgm_read_byte_near(channelList + max_rssi_scan_index);

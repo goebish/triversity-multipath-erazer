@@ -347,7 +347,7 @@ void changeChannel()
                     tft.setCursor(40, 43);
                     break;
             }
-            tft.print(F("Searching ..."));
+            printText(&misc_string[STRING_SEARCHING]);
             int8_t direction=1;
             if(BTN_LEFT) {
                 direction = -1;
