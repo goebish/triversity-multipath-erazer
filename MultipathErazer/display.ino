@@ -324,12 +324,12 @@ void updateScannerDialog(uint8_t portion) {
 }
 
 // display 8 bit grayscale RLE compressed bitmap
-void showBitmap() {
+void showBitmap(const uint8_t* bitmap) {
     uint8_t x=0, y=SCREEN_HEIGHT-1;
-    uint16_t pos=0;
+    uint8_t* cursor= (uint8_t*)bitmap;
     for(;;) {
-        uint8_t len = pgm_read_byte_near( splash_logo + (pos++));
-        uint8_t command = pgm_read_byte_near( splash_logo + (pos++));
+        uint8_t len = pgm_read_byte_near(cursor++);
+        uint8_t command = pgm_read_byte_near(cursor++);
         if(len != 0) { // draw x consecutive pixels of the same color
             tft.drawFastHLine(x,y,len,convertColor(command,command,command));
             x += len;
@@ -345,11 +345,11 @@ void showBitmap() {
                 // single pixels run
                 len = command;
                 while(len--) {
-                    uint8_t color = pgm_read_byte_near( splash_logo + (pos++));
+                    uint8_t color = pgm_read_byte_near(cursor++);
                     tft.drawPixel(x++, y, convertColor(color,color,color));
                 }
                 if(command & 0x01) { // sequence not aligned on word boundary
-                    pos++; // skip 0 padding
+                    cursor++; // skip 0 padding
                 }
             }
         }
@@ -358,7 +358,7 @@ void showBitmap() {
 
 void displaySplash()
 {
-    showBitmap();
+    showBitmap(splash_logo);
     for(uint8_t i=0; i<30; i++) {
         PORTC = (PORTC & ~0b111000) | (0b1000 << (i % 3));
         if(i>26) {
