@@ -222,7 +222,7 @@ void processSettingsMenu()
                         config.switch_period--;
                     else
                         config.switch_period -= 10;
-                else if(BTN_RIGHT && config.switch_period < HYST_MAX)
+                else if(BTN_RIGHT && config.switch_period < MAX_PERIOD)
                     if(config.switch_period < 50)
                         config.switch_period++;
                     else
@@ -503,7 +503,7 @@ void processMainState()
 
 void switchBestRSSI()
 {
-    static uint32_t last_switch = 0;
+    static uint32_t next_switch = 0;
     max_rssi = 0;
     for(uint8_t i = 0; i < NUMBER_OF_RECEIVER; i++) {
         RSSI_Value[i] = analogRead(RSSI_Pin[i]);
@@ -512,9 +512,9 @@ void switchBestRSSI()
             MaxSource = i;
         }
     }
-    if(millis() >= last_switch) {
+    if(millis() >= next_switch) {
         select(MaxSource);
-        last_switch = millis() + config.switch_period;
+        next_switch = millis() + config.switch_period;
     }
 }
 

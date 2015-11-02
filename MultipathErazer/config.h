@@ -3,7 +3,7 @@
 
 #define VBAT_ALARM_MIN  60
 #define VBAT_ALARM_MAX  200
-#define HYST_MAX 990
+#define MAX_PERIOD 990
 #define EEPROM_MARKER 0xDEADBEEF
 
 enum e_switch_beep{

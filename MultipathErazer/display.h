@@ -81,7 +81,6 @@ const char dialog_title_str2[] PROGMEM = "Main Menu";
 const char dialog_title_str3[] PROGMEM = "RSSI";
 const char dialog_title_str4[] PROGMEM = "Band Scanner";
 const char dialog_title_str5[] PROGMEM = "Settings";
-const char dialog_title_str6[] PROGMEM = "Hysteresis";
 
 PGM_P const dialog_title[] PROGMEM = {
     dialog_title_str1,
@@ -89,7 +88,6 @@ PGM_P const dialog_title[] PROGMEM = {
     dialog_title_str3,
     dialog_title_str4,
     dialog_title_str5,
-    dialog_title_str6,
 };
 
 ///////////////////
