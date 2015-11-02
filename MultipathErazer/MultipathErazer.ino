@@ -31,14 +31,15 @@ const uint8_t channelList[] PROGMEM = {
     30,  0, 15, 31, 38, 20, 21, 39, 22, 23
 };
 
+const uint8_t beep_length[4] = {0, 1, 4, 10};
+
 uint16_t RSSI_Value[NUMBER_OF_RECEIVER];
-uint8_t SelectedSource = 0;
 uint8_t vbat;
 uint8_t MaxSource = 0;
 int16_t max_rssi = 0;
 int8_t max_rssi_scan_index;
 bool show_active_leds = true;
-uint8_t current_main_menu_item;
+uint8_t current_menu_item;
 boolean scan_first_pass = true;
 uint16_t scan_max_found = 0;
 uint16_t scan_last_max_found = 0;
@@ -46,6 +47,7 @@ uint8_t scan_channel;
 uint8_t channelIndex;
 uint8_t scan_best_index=0;
 uint16_t anim_count;
+uint32_t last_switch_beep=0;
 bool searching=false;
 
 // timers
@@ -145,8 +147,8 @@ void initState()
             show_active_leds=true;
             break;
         case STATE_MAIN_MENU:
-            current_main_menu_item = MAIN_MENU_EXIT;
-            updateMainMenu(_BV(MAIN_MENU_INIT) | _BV(MAIN_MENU_ITEMS));
+            current_menu_item = MAIN_MENU_EXIT;
+            updateMainMenuDialog(_BV(MAIN_MENU_INIT) | _BV(MAIN_MENU_ITEMS));
             show_active_leds=true;
             break;
         case STATE_SCANNER:
@@ -162,7 +164,8 @@ void initState()
             delay(100);
             break;
         case STATE_SETTINGS_MENU:
-            updateSettingsMenuDialog(_BV(SETTINGS_MENU_INIT));
+            current_menu_item = SETTINGS_MENU_EXIT;
+            updateSettingsMenuDialog(_BV(SETTINGS_MENU_INIT) | _BV(SETTINGS_MENU_ITEMS));
             show_active_leds=true;
             break;
     }
@@ -170,12 +173,77 @@ void initState()
 
 void processSettingsMenu()
 {
-    if(BTN_ANY) {
-        shortbeep();
-        state = STATE_MAIN;
-        initState();
+    uint8_t i;
+    if(BTN_UP || BTN_DOWN) {
+        if(BTN_UP && current_menu_item > 0) {
+            shortbeep();
+            current_menu_item --;
+            updateSettingsMenuDialog(_BV(SETTINGS_MENU_ITEMS));
+        } else
+        if(BTN_DOWN && current_menu_item < SETTINGS_MENU_NB_ITEMS-1) {
+            shortbeep();
+            current_menu_item ++;
+            updateSettingsMenuDialog(_BV(SETTINGS_MENU_ITEMS));
+        }
         waitButtonsRelease();
-        return;
+    } else
+    if(BTN_LEFT || BTN_RIGHT) {
+        shortbeep();
+        uint8_t auto_repeat = 4;
+        switch(current_menu_item) {
+            case SETTINGS_MENU_EXIT:
+                state = STATE_MAIN_MENU;
+                initState();
+                saveSettings = millis();
+                waitButtonsRelease();
+                break;
+            case SETTINGS_MENU_VBAT_ALARM:
+                if(BTN_LEFT && config.vbat_alarm > VBAT_ALARM_MIN)
+                        config.vbat_alarm --;
+                else if(BTN_RIGHT && config.vbat_alarm < VBAT_ALARM_MAX)
+                        config.vbat_alarm ++;
+                vbat = map( analogRead(VBAT)*10, 0, 10240, 0, VBAT_FACTOR);
+                updateMainDialog(_BV(MAIN_BATTERY) | _BV(MAIN_FORCE_BATTERY_REDRAW));
+                updateSettingsMenuDialog(_BV(SETTINGS_MENU_CHANGE_SETTING));
+                while(BTN_ANY && auto_repeat--)
+                    delay(50);
+                break;
+            case SETTINGS_MENU_BEEP_VOLUME:
+                if(BTN_LEFT && config.beep_volume > BEEP_OFF)
+                    config.beep_volume--;
+                else if(BTN_RIGHT && config.beep_volume < BEEP_LOUDER)
+                    config.beep_volume++;
+                updateSettingsMenuDialog(_BV(SETTINGS_MENU_CHANGE_SETTING));
+                waitButtonsRelease();
+                break;
+            case SETTINGS_MENU_PERIOD:
+                if(BTN_LEFT && config.switch_period > 0)
+                    if(config.switch_period <= 50)
+                        config.switch_period--;
+                    else
+                        config.switch_period -= 10;
+                else if(BTN_RIGHT && config.switch_period < HYST_MAX)
+                    if(config.switch_period < 50)
+                        config.switch_period++;
+                    else
+                        config.switch_period += 10;
+                updateSettingsMenuDialog(_BV(SETTINGS_MENU_CHANGE_SETTING));
+                while(BTN_ANY && auto_repeat--)
+                    delay(15);
+                break;
+            case SETTINGS_MENU_FACTORY_RESET:
+                for(i=0; i<3; i++) {
+                    BUZZ_ON;
+                    delay(100);
+                    BUZZ_OFF;
+                    delay(100);
+                }
+                state = STATE_MAIN;
+                resetConfig();
+                initState();
+                waitButtonsRelease();
+                break;
+        }
     }
 }
 
@@ -209,7 +277,7 @@ void processScanner()
         if(BTN_RIGHT) { // Yes
             shortbeep();
             config.current_channel = scan_best_index;
-            saveSettings = millis()+500;
+            saveSettings = millis();
             state = STATE_MAIN;
             initState();
             waitButtonsRelease();
@@ -268,21 +336,21 @@ void processCalibState()
 void processMainMenu()
 {
     if(BTN_UP || BTN_DOWN) {
-        if(BTN_UP && current_main_menu_item > 0) {
+        if(BTN_UP && current_menu_item > 0) {
             shortbeep();
-            current_main_menu_item --;
-            updateMainMenu(_BV(MAIN_MENU_ITEMS));
+            current_menu_item --;
+            updateMainMenuDialog(_BV(MAIN_MENU_ITEMS));
         } else
-        if(BTN_DOWN && current_main_menu_item < MAIN_MENU_ITEMS-1) {
+        if(BTN_DOWN && current_menu_item < MAIN_MENU_NB_ITEMS-1) {
             shortbeep();
-            current_main_menu_item ++;
-            updateMainMenu(_BV(MAIN_MENU_ITEMS));
+            current_menu_item ++;
+            updateMainMenuDialog(_BV(MAIN_MENU_ITEMS));
         }
         waitButtonsRelease();
     } else
     if(BTN_LEFT || BTN_RIGHT) {
         shortbeep();
-        switch(current_main_menu_item) {
+        switch(current_menu_item) {
             case MAIN_MENU_EXIT:
                 state = STATE_MAIN;
                 break;
@@ -376,10 +444,10 @@ void changeChannel()
                 }
                 // let rx stabilize on new frequency
                 if((direction == 1 && config.current_channel % 8 == 0) ||
-                    direction ==-1 && config.current_channel % 8 == 7) {
+                   (direction ==-1 && config.current_channel % 8 == 7)) {
                     shortbeep(); // beep on band change
                     wait(RSSI_STABILIZATION_TIME-8);
-                    } else {
+                } else {
                     wait(RSSI_STABILIZATION_TIME);
                 }
                 switchBestRSSI();
@@ -435,38 +503,19 @@ void processMainState()
 
 void switchBestRSSI()
 {
+    static uint32_t last_switch = 0;
+    max_rssi = 0;
     for(uint8_t i = 0; i < NUMBER_OF_RECEIVER; i++) {
         RSSI_Value[i] = analogRead(RSSI_Pin[i]);
-    }
-    MaxSource = getMaxIndex(RSSI_Value, NUMBER_OF_RECEIVER);
-    select(MaxSource);
-}
-
-uint16_t getMaxIndex(unsigned int Array[], unsigned int iSize)
-{
-    if(iSize <= 1)
-    {
-        return 0;
-    }
-    max_rssi = Array[0];
-    uint8_t iIndexMax = 0;
-    //int16_t hysteresis = analogRead(RSSI_Hysteresis_Pin) >> 5; // 0 - 3.125% hysteresis
-    int16_t hysteresis = 0;
-    static int16_t last_max = 0;
-    static uint8_t last_index = 0;
-    for(unsigned int i = 1; i < iSize; i++)
-    {
-        if(Array[i] > (uint16_t)max_rssi)
-        {
-            max_rssi = Array[i];
-            iIndexMax = i;
+        if(RSSI_Value[i] > max_rssi) {
+            max_rssi = RSSI_Value[i];
+            MaxSource = i;
         }
     }
-    if((max_rssi < last_max - hysteresis) || (max_rssi > last_max + hysteresis)) {
-        last_max = max_rssi;
-        last_index = iIndexMax;
+    if(millis() >= last_switch) {
+        select(MaxSource);
+        last_switch = millis() + config.switch_period;
     }
-    return last_index;
 }
 
 // short blocking beep for button press
@@ -480,9 +529,9 @@ void shortbeep()
 // alarm beep management, must be called regularly
 void alarmBeep()
 {
-    if(vbat < config.vbat_alarm) {
-        // every 10 seconds
-        uint32_t now = millis() % 10000;
+    if(vbat <= config.vbat_alarm) {
+        // every 5 seconds
+        uint32_t now = millis() % 5000;
         // for 2 seconds
         if(now < 2000) {
             // beep 250ms every 500ms
@@ -492,6 +541,9 @@ void alarmBeep()
                 BUZZ_OFF;
             }
         }
+    }
+    else if(searching==false && millis() < last_switch_beep + beep_length[config.beep_volume]) {
+        BUZZ_ON;
     } else
         BUZZ_OFF;
 }

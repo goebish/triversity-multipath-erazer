@@ -8,10 +8,10 @@ void initSwitcher()
 
 void select(uint8_t source)
 {
+    static uint8_t SelectedSource = 0;
     // select PI5V Output 
     uint8_t temp = PORTD & 0b10011111;
     PORTD = temp | (source << 5);
-    SelectedSource = source;
     // led for active vRX + all other vRX(s) with same RSSI 
     if(show_active_leds) {
         uint8_t val =  PORTC &= ~0b111000;
@@ -21,5 +21,10 @@ void select(uint8_t source)
             }
         }
         PORTC = val;
-    }    
+    }
+    if(source != SelectedSource) {
+        if(millis() > last_switch_beep+100)
+            last_switch_beep = millis();
+        SelectedSource = source; 
+    }       
 }

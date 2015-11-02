@@ -71,7 +71,6 @@ void updateMainDialog(uint8_t portion)
         tft.setTextSize(2);
         tft.setCursor(10,30);
         printText(&misc_string[STRING_BAND]);
-        tft.setCursor(10, 45);
         for(i=0; i<8; i++) {
             tft.setCursor(12 + i*18 , 60);
             tft.print(i+1);
@@ -103,17 +102,17 @@ void updateMainDialog(uint8_t portion)
 
     if(portion & _BV(MAIN_BATTERY)) { // battery voltage
         static uint8_t last_vbat=0;
-        if(vbat != last_vbat) {
+        if(vbat != last_vbat || (portion & _BV(MAIN_FORCE_BATTERY_REDRAW))) {
             tft.setCursor(120, 4);
             tft.setTextSize(1);
-            if(vbat >= 114) { // > 3.8V / cell
-                tft.setTextColor(ST7735_GREEN, ST7735_BLACK);
+            if(vbat <= config.vbat_alarm) { 
+                tft.setTextColor(ST7735_RED, ST7735_BLACK);
             }
-            else if(vbat >= 111) { // > 3.7V / cell
+            else if(vbat <= config.vbat_alarm + 4) { 
                 tft.setTextColor(ST7735_YELLOW, ST7735_BLACK);
             }
-            else { // < 3.7V / cell
-                tft.setTextColor(ST7735_RED, ST7735_BLACK);
+            else { 
+                tft.setTextColor(ST7735_GREEN, ST7735_BLACK);
             }
             tft.print((float)vbat/10, 1);
             tft.print(" V");
@@ -207,7 +206,7 @@ void updateCalibDialog(uint8_t portion)
     }
 }
 
-void updateMainMenu(uint8_t portion)
+void updateMainMenuDialog(uint8_t portion)
 {
     uint8_t i;
     static uint8_t previous_selection = MAIN_MENU_EXIT;
@@ -216,31 +215,88 @@ void updateMainMenu(uint8_t portion)
         clearFrame();
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
         tft.setTextSize(2);
-        for (i=0; i<MAIN_MENU_ITEMS; i++) {
+        for (i=0; i<MAIN_MENU_NB_ITEMS; i++) {
             centerText(&main_menu_item[i], 24+i*26, 2);
         }
     }
+    
     if(portion & _BV(MAIN_MENU_ITEMS)) {
         tft.setTextSize(2);
         tft.setTextColor(ST7735_WHITE);
         tft.fillRect(6, 22 + previous_selection*26, 147, 19, ST7735_BLACK);
         centerText(&main_menu_item[previous_selection], 24+previous_selection*26, 2);
         tft.setTextColor(ST7735_BLACK);
-        tft.fillRect(6, 22 + current_main_menu_item*26, 147, 19, ST7735_WHITE);
-        centerText(&main_menu_item[current_main_menu_item], 24+current_main_menu_item*26, 2);
-        previous_selection = current_main_menu_item;
+        tft.fillRect(6, 22 + current_menu_item*26, 147, 19, ST7735_WHITE);
+        centerText(&main_menu_item[current_menu_item], 24+current_menu_item*26, 2);
+        previous_selection = current_menu_item;
     }
 }
 
-void updateSettingsMenuDialog(uint8_t portion) {
+void printSettingValue(uint8_t settings_item)
+{
+    switch(settings_item) {
+        case SETTINGS_MENU_VBAT_ALARM:
+            tft.print((float)config.vbat_alarm/10,1);
+            tft.print(" V ");
+            break;
+        case SETTINGS_MENU_BEEP_VOLUME:
+            printText(&beep_volume_item[config.beep_volume]);
+            break;
+        case SETTINGS_MENU_PERIOD:
+            tft.print(config.switch_period);
+            tft.print(" ms ");
+            break;
+    }
+}
+
+void updateSettingsMenuDialog(uint8_t portion)
+{
+    uint8_t i;
+    static uint8_t previous_selection = SETTINGS_MENU_EXIT;
     if(portion & _BV(SETTINGS_MENU_INIT)) {
         refreshTitle();
         clearFrame();
-
-        locate(1,4,2);
-        tft.setTextSize(2);
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        tft.setTextSize(1);
+        centerText(&settings_menu_item[SETTINGS_MENU_EXIT], 24, 1);
+        for (i=1; i<SETTINGS_MENU_NB_ITEMS; i++) {
+            tft.setCursor(10, 24+i*18);
+            printText(&settings_menu_item[i]);
+            tft.setCursor(110, 24+i*18);
+            printSettingValue(i);
+        }
+    }
+    
+    if(portion & _BV(SETTINGS_MENU_ITEMS)) {
+        tft.setTextSize(1);
         tft.setTextColor(ST7735_WHITE);
-        tft.print(F("Coming soon"));
+        tft.setCursor(10, 24+previous_selection*18);
+        tft.fillRect(8, 22 + previous_selection*18, 144, 11, ST7735_BLACK);
+        if(previous_selection == SETTINGS_MENU_EXIT) {
+            centerText(&settings_menu_item[SETTINGS_MENU_EXIT], 24, 1);
+        } else {
+            printText(&settings_menu_item[previous_selection]);
+            tft.setCursor(110, 24+previous_selection*18);
+            printSettingValue(previous_selection);
+        }
+        
+        tft.setTextColor(ST7735_BLACK);
+        tft.setCursor(10, 24 + current_menu_item*18);
+        tft.fillRect(8, 22 + current_menu_item*18, 144, 11, ST7735_WHITE);
+        if(current_menu_item == SETTINGS_MENU_EXIT) {
+            centerText(&settings_menu_item[SETTINGS_MENU_EXIT], 24, 1);
+            } else {
+            printText(&settings_menu_item[current_menu_item]);
+            tft.setCursor(110, 24 + current_menu_item*18);
+            printSettingValue(current_menu_item);
+        }       
+        previous_selection = current_menu_item;
+    }
+    
+    if(portion & _BV(SETTINGS_MENU_CHANGE_SETTING)) {
+        tft.setTextColor(ST7735_BLACK, ST7735_WHITE);
+        tft.setCursor(110, 24 + current_menu_item*18);
+        printSettingValue(current_menu_item);
     }
 }
 

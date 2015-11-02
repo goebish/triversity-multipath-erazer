@@ -12,6 +12,7 @@ enum e_MAIN_DIALOG{ // portions for updateMainDialog
     MAIN_BAND,
     MAIN_CHANNEL,
     MAIN_BATTERY,
+    MAIN_FORCE_BATTERY_REDRAW,
 };
 
 enum e_CALIB_DIALOG{
@@ -31,6 +32,7 @@ enum e_MAIN_MENU_DIALOG{
 enum e_SETTINGS_MENU_DIALOG{
     SETTINGS_MENU_INIT,
     SETTINGS_MENU_ITEMS,
+    SETTINGS_MENU_CHANGE_SETTING,
 };
 
 enum e_SCANNER_DIALOG{
@@ -79,6 +81,7 @@ const char dialog_title_str2[] PROGMEM = "Main Menu";
 const char dialog_title_str3[] PROGMEM = "RSSI";
 const char dialog_title_str4[] PROGMEM = "Band Scanner";
 const char dialog_title_str5[] PROGMEM = "Settings";
+const char dialog_title_str6[] PROGMEM = "Hysteresis";
 
 PGM_P const dialog_title[] PROGMEM = {
     dialog_title_str1,
@@ -86,6 +89,7 @@ PGM_P const dialog_title[] PROGMEM = {
     dialog_title_str3,
     dialog_title_str4,
     dialog_title_str5,
+    dialog_title_str6,
 };
 
 ///////////////////
@@ -110,7 +114,46 @@ enum e_MAIN_MENU_ITEM{
     MAIN_MENU_SETTINGS,
 };
 
-#define MAIN_MENU_ITEMS (sizeof(main_menu_item)/sizeof(char *)) //array size
+#define MAIN_MENU_NB_ITEMS (sizeof(main_menu_item)/sizeof(char *)) //array size
+
+///////////////////
+// settings menu items
+
+const char settings_menu_item_str1[] PROGMEM = "Exit";
+const char settings_menu_item_str2[] PROGMEM = "Bat Alarm";
+const char settings_menu_item_str3[] PROGMEM = "Beep Volume";
+const char settings_menu_item_str4[] PROGMEM = "Min Sw Period";
+const char settings_menu_item_strR[] PROGMEM = "Factory Reset";
+
+PGM_P const settings_menu_item[] PROGMEM = {
+    settings_menu_item_str1,
+    settings_menu_item_str2,
+    settings_menu_item_str3,
+    settings_menu_item_str4,
+    settings_menu_item_strR,
+};
+
+enum e_SETTINGS_MENU_ITEM {
+    SETTINGS_MENU_EXIT,
+    SETTINGS_MENU_VBAT_ALARM,
+    SETTINGS_MENU_BEEP_VOLUME,
+    SETTINGS_MENU_PERIOD,
+    SETTINGS_MENU_FACTORY_RESET,    
+};
+
+#define SETTINGS_MENU_NB_ITEMS (sizeof(settings_menu_item)/sizeof(char*))
+
+const char beep_volume_str1[] PROGMEM = "Off   ";
+const char beep_volume_str2[] PROGMEM = "Quiet ";
+const char beep_volume_str3[] PROGMEM = "Loud  ";
+const char beep_volume_str4[] PROGMEM = "Louder";
+
+PGM_P const beep_volume_item[] PROGMEM = {
+    beep_volume_str1,
+    beep_volume_str2,
+    beep_volume_str3,
+    beep_volume_str4,
+};
 
 ///////////////////
 // misc strings
