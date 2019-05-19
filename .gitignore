@@ -1,6 +1,9 @@
 *.cppproj
 *.atsln
 *.atsuo
+*.vcxproj
+*.vcxproj.filters
+MultipathErazer/__vm
 MultipathErazer/Debug
 MultipathErazer/Release
 MultipathErazer/Visual Micro
